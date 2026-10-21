@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
-import { focusCard } from "@/lib/bank/cardFocus";
+import { focusCard, startCardFlight } from "@/lib/bank/cardFocus";
 import { CardFace } from "../CardFace";
 import { AddCardSheet } from "./AddCardSheet";
 import { PlansSheet } from "./Plans";
@@ -197,8 +197,9 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
             <button
               key={c.id}
               type="button"
-              onClick={() => {
-                // Open the Cards page on this card.
+              onClick={(e) => {
+                // The card flies from here to its place on the Cards page, and that page opens on this card.
+                startCardFlight(c, e.currentTarget.getBoundingClientRect());
                 focusCard(c.id);
                 onNavigate("cards");
               }}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Eye, EyeOff, Plus, Settings2, Snowflake } from "lucide-react";
 import { setGlowTone } from "@/lib/bank/cardGlow";
 import { mouseDragHandlers } from "@/lib/bank/dragScroll";
-import { takeFocusedCard } from "@/lib/bank/cardFocus";
+import { setCardFlightTarget, takeFocusedCard } from "@/lib/bank/cardFocus";
 import { CardSettingsSheet } from "./CardSettingsSheet";
 import type { Card } from "@/lib/bank/data";
 import { MAX_CARDS } from "@/lib/bank/money";
@@ -34,7 +34,7 @@ const cvvOf = (card: Card) => card.cvv ?? "•••";
 /** The front of a card: the same glass design as on Home. */
 function MetalFront({ card, active }: { card: Card; frozen: boolean; active: boolean }) {
   return (
-    <div className={`absolute inset-0 transition-opacity duration-500 ${active ? "" : "opacity-90"}`} style={faceStyle} role="img" aria-label={`${card.label} ending ${card.last4}${card.frozen ? ", frozen" : ""}`}>
+    <div data-front className={`absolute inset-0 transition-opacity duration-500 ${active ? "" : "opacity-90"}`} style={faceStyle} role="img" aria-label={`${card.label} ending ${card.last4}${card.frozen ? ", frozen" : ""}`}>
       <CardFace card={card} />
     </div>
   );
@@ -140,7 +140,13 @@ export function CardsSection() {
   useEffect(() => {
     const id = takeFocusedCard();
     const i = id ? cards.findIndex((c) => c.id === id) : -1;
-    if (i >= 0) window.setTimeout(() => goTo(i), 0);
+    if (i < 0) return;
+    // Jump straight to the card, then tell the flying copy exactly where it lands.
+    track.current?.scrollTo({ left: i * step(), behavior: "auto" });
+    requestAnimationFrame(() => {
+      const front = track.current?.querySelectorAll<HTMLElement>("[data-front]")[i];
+      if (front) setCardFlightTarget(front.getBoundingClientRect());
+    });
     // Only on the first render of this page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

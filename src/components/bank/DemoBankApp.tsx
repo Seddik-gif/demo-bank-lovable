@@ -17,6 +17,7 @@ import { PaymentsSection } from "./sections/Payments";
 import { REPLAY_TOUR_EVENT, WelcomeTour } from "./Welcome";
 import { getProfileName } from "@/lib/bank/profile";
 import { NoticeToast } from "./Notifications";
+import { CardFlightLayer } from "./CardFlight";
 import { CardGlow } from "./CardGlow";
 
 type ViewProps = { onNavigate: (id: SectionId) => void; onSignOut: () => void };
@@ -149,6 +150,7 @@ export function DemoBankApp() {
       )}
       {signedIn && welcomeName && <WelcomeTour name={welcomeName} onDone={() => setWelcomeName(null)} />}
       <NoticeToast />
+      <CardFlightLayer />
     </BankProvider>
   );
 }
