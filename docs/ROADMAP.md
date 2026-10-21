@@ -45,6 +45,13 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 ## Phase 1: Motion (branch `feat/motion`), finish
 
 - [ ] 11. Check the account swipe with touch on a real phone.
+  - Done in the browser: a touch-style drag (touch pointer events, phone-sized emulation) moved the account pager to the next account.
+  - Still to do on your phone: the checklist below.
+    1. Swipe the account pages left and right with one finger. Each swipe should move one page.
+    2. A slow drag should settle on the nearest page. A fast flick should go one page.
+    3. Scroll the page up and down on the account card. The page should still scroll vertically.
+    4. Tap "Move money" and "See more" after a swipe. They should open, not be lost to the swipe.
+    5. Tap a dot at the bottom of the pager. The pages should move to that account.
 
 ## Screen redesigns (branch `feat/screens`)
 
