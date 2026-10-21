@@ -29,7 +29,7 @@ export function CardFace({ card, className = "" }: { card: Card; holder?: string
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="font-mono text-[18px] font-medium tracking-[0.18em]">{digits}</p>
+        <p className="font-mono text-[11px] font-medium tracking-[0.16em]" style={{ color: card.tone === "violet" ? "rgba(255,255,255,0.85)" : "rgba(30,27,75,0.75)" }}>{digits}</p>
         <svg viewBox="0 0 24 24" className="h-6 w-6 opacity-80" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
           <path d="M8.5 9.5a4 4 0 0 1 0 5" />
           <path d="M11.5 7a7.5 7.5 0 0 1 0 10" />
