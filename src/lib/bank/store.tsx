@@ -107,7 +107,7 @@ interface BankApi extends BankState {
   openAccount: (cfg: NewAccountConfig) => Result;
   investBuy: (accountId: string, symbol: string, usd: number) => Result;
   investSell: (accountId: string, symbol: string, units: number) => Result;
-  setRoundUp: (goalId: string, on: boolean) => void;
+  setRoundUp: (on: boolean) => void;
   startNewAccount: () => void;
   setTransactionCategory: (txnId: string, category: string) => Result;
   blockNextPayment: (name: string) => void;
@@ -458,10 +458,9 @@ export function BankProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
-  const setRoundUp = useCallback((goalId: string, on: boolean) => {
-    const goal = stateRef.current.goals.find((g) => g.id === goalId);
-    setState((s) => applyRoundUpToggle(s, goalId, on));
-    if (goal) track("goal", `${goal.name}: round-ups ${on ? "on" : "off"}`);
+  const setRoundUp = useCallback((on: boolean) => {
+    setState((s) => applyRoundUpToggle(s, on));
+    track("account", `Round-up ${on ? "on" : "off"}`);
   }, []);
 
   const removeCard = useCallback((cardId: string): Result => {

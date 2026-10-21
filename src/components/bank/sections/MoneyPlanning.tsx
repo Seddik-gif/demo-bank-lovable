@@ -48,7 +48,7 @@ function GoalRow({ goalId }: { goalId: string }) {
         <label className="min-w-0 space-y-1 text-xs">
           <span className="text-muted-foreground">Account</span>
           <select className="field" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts.filter((a) => a.kind !== "crypto" && a.kind !== "pockets").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            {accounts.filter((a) => a.kind !== "crypto").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </label>
         <label className="space-y-1 text-xs">
@@ -197,7 +197,7 @@ export function SchedulesPanel() {
         <label className="min-w-0 space-y-1 text-xs">
           <span className="text-muted-foreground">From</span>
           <select className="field" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts.filter((a) => a.kind !== "crypto" && a.kind !== "pockets").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            {accounts.filter((a) => a.kind !== "crypto").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </label>
         <label className="space-y-1 text-xs">

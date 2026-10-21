@@ -321,7 +321,7 @@ export function validateNewAccount(state: BankState, cfg: NewAccountConfig): Res
   return { ok: true };
 }
 
-// ---- Round-up pockets -------------------------------------------------------------
+// ---- Round-up account -------------------------------------------------------------
 
 /** The spare change that rounds a payment up to the next whole dollar. */
 export function spareChange(amount: number): number {
@@ -331,35 +331,37 @@ export function spareChange(amount: number): number {
 }
 
 /**
- * Adds the spare change from each payment to the first round-up pocket that still has room.
+ * Moves the spare change from each payment into the Round-up account (when it exists and is switched on).
  * `parts` are the amounts taken from each account. Returns the new state and the round-ups made.
  */
 export function applyRoundUps(state: BankState, parts: { accountId: string; amount: number }[], now = new Date()): { state: BankState; ups: { pocket: string; amount: number }[] } {
-  const pocket = state.goals.find((g) => g.roundUp && g.saved < g.target);
-  if (!pocket) return { state, ups: [] };
+  const roundUpAccount = state.accounts.find((a) => a.kind === "pockets" && a.roundUp !== false);
+  if (!roundUpAccount) return { state, ups: [] };
   let next = state;
   const ups: { pocket: string; amount: number }[] = [];
   for (const part of parts) {
+    if (part.accountId === roundUpAccount.id) continue;
     const spare = spareChange(part.amount);
-    const room = round2(pocket.target - (next.goals.find((g) => g.id === pocket.id)?.saved ?? 0));
-    if (spare <= 0 || room <= 0) continue;
-    const value = Math.min(spare, room);
-    const account = next.accounts.find((a) => a.id === part.accountId);
-    if (!account || account.balance < value) continue;
-    const txn: Transaction = { id: uid(), date: now.toISOString(), description: `Round-up to ${pocket.name}`, category: "Savings", amount: -value, accountId: part.accountId };
+    if (spare <= 0) continue;
+    const source = next.accounts.find((a) => a.id === part.accountId);
+    if (!source || source.balance < spare) continue;
+    const iso = now.toISOString();
+    const out: Transaction = { id: uid(), date: iso, description: "Round-up saved", category: "Savings", amount: -spare, accountId: part.accountId };
+    const into: Transaction = { id: uid(), date: iso, description: `Round-up from ${source.name}`, category: "Savings", amount: spare, accountId: roundUpAccount.id };
     next = {
       ...next,
-      accounts: next.accounts.map((a) => (a.id === part.accountId ? { ...a, balance: round2(a.balance - value) } : a)),
-      goals: next.goals.map((g) => (g.id === pocket.id ? { ...g, saved: round2(g.saved + value) } : g)),
-      transactions: [txn, ...next.transactions],
+      accounts: next.accounts.map((a) =>
+        a.id === part.accountId ? { ...a, balance: round2(a.balance - spare) } : a.id === roundUpAccount.id ? { ...a, balance: round2(a.balance + spare) } : a,
+      ),
+      transactions: [out, into, ...next.transactions],
     };
-    ups.push({ pocket: pocket.name, amount: value });
+    ups.push({ pocket: roundUpAccount.name, amount: spare });
   }
   return { state: next, ups };
 }
 
-export function applyRoundUpToggle(state: BankState, goalId: string, on: boolean): BankState {
-  return { ...state, goals: state.goals.map((g) => (g.id === goalId ? { ...g, roundUp: on } : g)) };
+export function applyRoundUpToggle(state: BankState, on: boolean): BankState {
+  return { ...state, accounts: state.accounts.map((a) => (a.kind === "pockets" ? { ...a, roundUp: on } : a)) };
 }
 
 // ---- Investments -------------------------------------------------------------------
@@ -433,7 +435,7 @@ export function applyNewAccount(state: BankState, cfg: NewAccountConfig): BankSt
             ? { id, name: "Crypto wallet", iban: "No IBAN", balance: 0, kind: "crypto" }
             : cfg.kind === "invest"
               ? { id, name: "Investments", iban, balance: 0, kind: "invest" }
-              : { id, name: "Round-up pockets", iban: "No IBAN", balance: 0, kind: "pockets" };
+              : { id, name: "Round-up", iban: "No IBAN", balance: 0, kind: "pockets", roundUp: true };
   return { ...state, accounts: [...state.accounts, account] };
 }
 

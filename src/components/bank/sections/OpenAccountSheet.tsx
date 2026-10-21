@@ -12,7 +12,7 @@ const OPTIONS: { id: Choice; title: string; detail: string; icon: typeof PiggyBa
   { id: "joint", title: "Joint account", detail: "Share an account with one other person, with its own IBAN. You can have one.", icon: Users },
   { id: "crypto", title: "Crypto wallet", detail: "Receive and sell crypto from one account page. Sales go to your main account.", icon: Bitcoin },
   { id: "invest", title: "Investments", detail: "Buy and sell funds, bonds and stocks with cash you move in from another account.", icon: TrendingUp },
-  { id: "pockets", title: "Round-up pockets", detail: "Spare change from your payments is put aside in pockets you choose.", icon: Coins },
+  { id: "pockets", title: "Round-up account", detail: "Spare change from your payments is saved here automatically. You can switch it off.", icon: Coins },
 ];
 
 /** Opens another kind of account next to the main current account. */

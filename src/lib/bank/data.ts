@@ -52,6 +52,8 @@ export interface Account {
   coHolder?: string;
   /** Savings account: the yearly interest rate, e.g. 0.0225 for 2.25%. */
   rate?: number;
+  /** Round-up account: whether spare change from payments is saved here. */
+  roundUp?: boolean;
 }
 
 export interface Transaction {
@@ -96,8 +98,6 @@ export interface Goal {
   name: string;
   target: number;
   saved: number;
-  /** A round-up pocket: spare change from payments is added to it. */
-  roundUp?: boolean;
 }
 
 export type Frequency = "weekly" | "monthly";

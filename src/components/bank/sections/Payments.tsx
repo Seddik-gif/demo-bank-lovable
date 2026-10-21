@@ -154,8 +154,8 @@ function PaymentPanel({ contact, request, onClose }: { contact: Contact; request
   const { confirmPayments, defaultAccountId } = useSettings();
   const fmt = useMoneyText();
   // The default account is listed first.
-  // Crypto wallets and pockets cannot pay out, so they are not offered here.
-  const payable = accounts.filter((a) => a.kind !== "crypto" && a.kind !== "pockets");
+  // Crypto wallets hold no cash, so they cannot pay out.
+  const payable = accounts.filter((a) => a.kind !== "crypto");
   const ordered = [...payable].sort((a, b) => Number(b.id === defaultAccountId) - Number(a.id === defaultAccountId));
 
   const splits: PaymentSplit[] = payable.map((a) => {

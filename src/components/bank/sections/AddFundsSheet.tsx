@@ -308,7 +308,7 @@ export function AddFundsSheet({ onClose }: { onClose: () => void }) {
         <label className="block space-y-1.5 text-sm">
           <span className="text-muted-foreground">Add to</span>
           <select className="field" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            {accounts.filter((a) => a.kind !== "crypto" && a.kind !== "pockets").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            {accounts.filter((a) => a.kind !== "crypto").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </label>
 

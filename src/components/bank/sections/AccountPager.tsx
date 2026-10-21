@@ -15,26 +15,24 @@ const KIND_LABEL: Record<AccountKind, string> = {
   joint: "Joint account",
   crypto: "Crypto wallet",
   invest: "Investments",
-  pockets: "Round-up pockets",
+  pockets: "Round-up account",
 };
 
-/** Accounts that hold their money somewhere else: their balance comes from holdings or pockets, not the cash balance. */
-function balanceOf(a: Account, s: { crypto: Record<string, number>; investments: Record<string, number>; goals: { saved: number }[] }): number {
+/** Crypto wallets hold their money as crypto and invest accounts add holdings; every other account shows its balance. */
+function balanceOf(a: Account, s: { crypto: Record<string, number>; investments: Record<string, number> }): number {
   if (a.kind === "crypto") return cryptoValue(s.crypto);
   if (a.kind === "invest") return Math.round((a.balance + investmentsValue(s.investments)) * 100) / 100;
-  if (a.kind === "pockets") return Math.round(s.goals.reduce((t, g) => t + g.saved, 0) * 100) / 100;
   return a.balance;
 }
 
 function activityOf(a: Account, transactions: Transaction[]): Transaction[] {
   if (a.kind === "crypto") return transactions.filter((t) => t.category === "Crypto");
-  if (a.kind === "pockets") return transactions.filter((t) => t.category === "Savings" && t.description.startsWith("Round-up"));
   return transactions.filter((t) => t.accountId === a.id);
 }
 
 /** The account pages on Home. Swipe sideways to move from one account to the next. */
 export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => void }) {
-  const { accounts, transactions, crypto, goals, investments } = useBank();
+  const { accounts, transactions, crypto, investments } = useBank();
   const [pos, setPos] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   // The main current account always comes first; the rest keep their opening order.
@@ -53,7 +51,7 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
       <div ref={track} onScroll={onScroll} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto scroll-smooth" aria-label="Accounts">
         {ordered.map((a) => (
           <div key={a.id} className="w-full shrink-0 snap-center px-4">
-            <AccountPage account={a} balance={balanceOf(a, { crypto, investments, goals })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} />
+            <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} />
           </div>
         ))}
       </div>
@@ -108,7 +106,7 @@ function Details({ account: a }: { account: Account }) {
     case "invest":
       return <InvestDetails account={a} />;
     case "pockets":
-      return <PocketsDetails />;
+      return <RoundUpDetails account={a} />;
     default:
       return <BankDetails account={a} />;
   }
@@ -230,61 +228,19 @@ function InvestDetails({ account }: { account: Account }) {
   );
 }
 
-function PocketsDetails() {
-  const { goals, setRoundUp, addGoal } = useBank();
-  const [name, setName] = useState("");
-  const [target, setTarget] = useState("");
-  const [error, setError] = useState("");
-
-  const add = (e: FormEvent) => {
-    e.preventDefault();
-    const res = addGoal(name, target.trim() === "" ? NaN : Number(target));
-    if (res.ok) {
-      setName("");
-      setTarget("");
-      setError("");
-    } else setError(res.error);
-  };
-
+function RoundUpDetails({ account: a }: { account: Account }) {
+  const { setRoundUp } = useBank();
+  const on = a.roundUp !== false;
   return (
     <div className="space-y-3 text-sm">
-      {goals.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No pockets yet. Add one below.</p>
-      ) : (
-        <ul className="space-y-2">
-          {goals.map((g) => {
-            const pct = Math.min(100, (g.saved / g.target) * 100);
-            return (
-              <li key={g.id} className="space-y-2 rounded-xl bg-secondary p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate font-semibold">{g.name}</span>
-                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground"><Money value={g.saved} /> of <Money value={g.target} /></span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-background/40" role="progressbar" aria-label={`${g.name} progress`} aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
-                  <div className="h-full rounded-full bg-accent-gradient" style={{ width: `${pct}%` }} />
-                </div>
-                <label className="flex cursor-pointer items-center justify-between gap-3 text-xs">
-                  <span>Round-ups from payments</span>
-                  <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={!!g.roundUp} onChange={(e) => setRoundUp(g.id, e.target.checked)} />
-                </label>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <form onSubmit={add} className="grid grid-cols-[1fr_6rem_auto] items-end gap-2">
-        <label className="min-w-0 space-y-1 text-xs">
-          <span className="text-muted-foreground">New pocket</span>
-          <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Groceries" maxLength={40} />
-        </label>
-        <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Target</span>
-          <input className="field tabular-nums" type="number" min="1" step="1" value={target} onChange={(e) => setTarget(e.target.value)} />
-        </label>
-        <button type="submit" className="btn btn-primary">Add</button>
-      </form>
-      {error && <p role="alert" className="text-xs font-medium text-destructive">{error}</p>}
-      <p className="flex items-center gap-1 text-xs text-muted-foreground"><Snowflake className="h-3 w-3" aria-hidden /> When a payment is made, the spare change up to the next dollar goes to the first pocket with round-ups on that has room.</p>
+      <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-secondary p-3">
+        <span>
+          <span className="block font-semibold">Round up my payments</span>
+          <span className="block text-xs text-muted-foreground">Spare change up to the next dollar is saved here.</span>
+        </span>
+        <input type="checkbox" className="h-4 w-4 shrink-0 accent-[var(--accent)]" checked={on} onChange={(e) => setRoundUp(e.target.checked)} aria-label="Round up my payments" />
+      </label>
+      <p className="flex items-center gap-1 text-xs text-muted-foreground"><Snowflake className="h-3 w-3" aria-hidden /> Round-ups come from payments you make, requests you pay and scheduled payments.</p>
     </div>
   );
 }

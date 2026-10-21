@@ -71,7 +71,7 @@ function SimulateIncoming() {
           {contacts.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
         </select>
         <select className="field" aria-label="Into account" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-          {accounts.filter((a) => a.kind !== "crypto" && a.kind !== "pockets").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          {accounts.filter((a) => a.kind !== "crypto").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
         <input className="field tabular-nums" type="number" min="0" step="0.01" inputMode="decimal" aria-label="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
         <button type="submit" className="btn btn-primary">Receive</button>
@@ -101,7 +101,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
   const [profileOpen, setProfileOpen] = useState(false);
 
   // Crypto wallets and round-up pockets hold their money elsewhere, so they are not transfer targets.
-  const bankAccounts = accounts.filter((a) => a.kind !== "crypto" && a.kind !== "pockets");
+  const bankAccounts = accounts.filter((a) => a.kind !== "crypto");
 
   const { defaultAccountId } = useSettings();
   const [fromId, setFromId] = useState(bankAccounts.find((a) => a.id === defaultAccountId)?.id ?? bankAccounts[0]?.id ?? "");
