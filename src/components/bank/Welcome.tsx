@@ -55,17 +55,27 @@ export function WelcomeTour({ name, onDone }: { name: string; onDone: () => void
   // Find the visible copy of the target (the phone bar and the desktop sidebar both carry the same markers).
   useLayoutEffect(() => {
     const measure = () => {
-      if (!step.target) {
-        setRect(null);
-        return;
-      }
-      const el = [...document.querySelectorAll<HTMLElement>(`[data-tour="${step.target}"]`)].find((e) => e.getBoundingClientRect().width > 0);
-      setRect(el ? el.getBoundingClientRect() : null);
+      const el = step.target ? [...document.querySelectorAll<HTMLElement>(`[data-tour="${step.target}"]`)].find((e) => e.getBoundingClientRect().width > 0) : undefined;
+      const r = el ? el.getBoundingClientRect() : null;
+      // Only update when the position really changed, so the per-frame check doesn't re-render the tour.
+      setRect((prev) => {
+        if (!prev && !r) return prev;
+        if (prev && r && prev.top === r.top && prev.left === r.left && prev.width === r.width && prev.height === r.height) return prev;
+        return r;
+      });
     };
     measure();
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, { passive: true });
+    // Re-measure every frame while the tour is open, so the spotlight follows the target as the page settles.
+    let frame = 0;
+    const loop = () => {
+      measure();
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
     return () => {
+      cancelAnimationFrame(frame);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure);
     };
@@ -81,28 +91,27 @@ export function WelcomeTour({ name, onDone }: { name: string; onDone: () => void
 
   const next = () => (last ? onDone() : setIndex((i) => i + 1));
 
-  // The page stays faded for the whole tour. The target is the only clear part; with no target, the spotlight is a point in the middle.
+  // One spotlight, not four panels: a transparent box whose huge shadow dims everything around it.
+  // With no target the box is a point in the middle, so the whole page is dimmed.
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const box = rect ? { top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12 } : { top: vh / 2, left: vw / 2, width: 0, height: 0 };
-  const bottomEdge = box.top + box.height;
-  const rightEdge = box.left + box.width;
-  // fade-in: the panels fade in once when the tour opens; after that their size and position animate with the transition.
-  const fade = "fade-in fixed z-[59] bg-background/60 backdrop-blur-sm pointer-events-none transition-all duration-500 ease-out";
 
   return (
     <>
-      <div aria-hidden className={fade} style={{ top: 0, left: 0, width: vw, height: Math.max(0, box.top) }} />
-      <div aria-hidden className={fade} style={{ top: bottomEdge, left: 0, width: vw, height: Math.max(0, vh - bottomEdge) }} />
-      <div aria-hidden className={fade} style={{ top: box.top, left: 0, width: Math.max(0, box.left), height: box.height }} />
-      <div aria-hidden className={fade} style={{ top: box.top, left: rightEdge, width: Math.max(0, vw - rightEdge), height: box.height }} />
-      {rect && (
-        <div
-          aria-hidden
-          className="fade-in pointer-events-none fixed z-[60] rounded-2xl ring-2 ring-accent transition-all duration-500 ease-out"
-          style={{ top: box.top, left: box.left, width: box.width, height: box.height, boxShadow: "0 0 32px var(--accent)" }}
-        />
-      )}
+      <div
+        aria-hidden
+        className="fixed z-[59] pointer-events-none rounded-2xl transition-[top,left,width,height] duration-300 ease-out"
+        style={{
+          top: box.top,
+          left: box.left,
+          width: box.width,
+          height: box.height,
+          boxShadow: rect
+            ? "0 0 0 100vmax oklch(0.13 0.035 280 / 0.62), 0 0 0 2px var(--accent), 0 0 32px var(--accent)"
+            : "0 0 0 100vmax oklch(0.13 0.035 280 / 0.62)",
+        }}
+      />
       <div role="dialog" aria-label="App tour" className="fade-in fixed inset-x-0 bottom-0 z-[61] flex justify-center px-4 pb-28">
         <div className="glass pip-enter w-full max-w-sm space-y-4 p-5">
           <div className="flex items-end gap-3">
