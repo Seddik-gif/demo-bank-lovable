@@ -66,7 +66,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 - [x] 15. Crypto and Invest.
   - Done: one shared holdings layout for both. A hero card shows the portfolio value, today's change as a coloured pill, and a bar showing how the holdings are split. Holdings are rows with a colour chip, the quantity and price, and the value with its 24-hour change. Investments with nothing held show an empty state with the coin illustration. Trading and the wallet are unchanged.
   - Checked in the preview: both screens render without errors, and the Investments empty state shows.
-- [ ] 16. Profile sub-windows (Accounts, Theme, Settings, and the rest).
+- [x] 16. Profile sub-windows (Accounts, Theme, Settings, and the rest).
+  - Done: each sub-window now uses the Profile's colours, with a header that has a round back button, the section's icon, its title and its one-line description, and a close button. Content is centred with room around it. Checked in the preview: Accounts opens with its header, Back returns to the Profile, and Close closes it.
+  - Not changed: the rows and settings groups inside each sub-window. They keep their current layout.
 
 ## Phase 6: Phone app (branch `feat/mobile`)
 

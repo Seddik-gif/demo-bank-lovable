@@ -661,15 +661,24 @@ export function ProfileSheet({
 
         {/* Sub-section window */}
         {open && current && (
-          <div className="page-fade absolute inset-0 z-10 flex flex-col bg-popover" role="dialog" aria-modal="true" aria-label={current.title}>
-            <div className="flex items-center gap-3 border-b border-border p-4">
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(null)} aria-label="Back to profile">
+          // The same colours as the Profile, so the sub-windows feel part of it.
+          <div className="page-fade absolute inset-0 z-10 flex flex-col" style={{ background: "linear-gradient(165deg, #4c1d95 0%, #1e1b4b 55%, #0b0a1f 100%)" }} role="dialog" aria-modal="true" aria-label={current.title}>
+            <div className="flex items-center gap-3 px-5 pb-3 pt-5">
+              <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20" onClick={() => setOpen(null)} aria-label="Back to profile">
                 <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
               </button>
-              <h3 className="min-w-0 flex-1 truncate text-lg font-semibold">{current.title}</h3>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-accent" aria-hidden>
+                <current.icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate font-display text-lg font-semibold">{current.title}</h3>
+                <p className="truncate text-xs text-white/70">{current.detail}</p>
+              </div>
+              <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>
             </div>
-            <div className="overflow-y-auto overscroll-contain p-4 pb-8">{detail(open)}</div>
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-10 pt-2">
+              <div className="mx-auto max-w-xl">{detail(open)}</div>
+            </div>
           </div>
         )}
       </SheetPanel>
