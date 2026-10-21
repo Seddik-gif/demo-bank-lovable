@@ -63,7 +63,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
   - Tested: the rules for the slices (8 tests in total for this, 88 tests overall), and the chart in the preview with three categories.
 - [x] 14. Activity.
   - Done: a summary card (net, money in, money out), type filters as pills, search and category in rounded fields, transactions grouped by day, and the receipt illustration when there is no activity at all. Checked in the preview: the summary is right, and the "Money in" pill narrows the list. The transaction details and the search still work as before.
-- [ ] 15. Crypto and Invest.
+- [x] 15. Crypto and Invest.
+  - Done: one shared holdings layout for both. A hero card shows the portfolio value, today's change as a coloured pill, and a bar showing how the holdings are split. Holdings are rows with a colour chip, the quantity and price, and the value with its 24-hour change. Investments with nothing held show an empty state with the coin illustration. Trading and the wallet are unchanged.
+  - Checked in the preview: both screens render without errors, and the Investments empty state shows.
 - [ ] 16. Profile sub-windows (Accounts, Theme, Settings, and the rest).
 
 ## Phase 6: Phone app (branch `feat/mobile`)

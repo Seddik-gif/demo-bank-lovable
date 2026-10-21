@@ -4,44 +4,74 @@ import { ASSET_NAMES, acquireMarket, useMarket } from "@/lib/bank/market";
 import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { SectionHeader } from "../Layout";
+import { CoinIllustration } from "../Illustrations";
 import { AssetDetail } from "./AssetDetail";
 import { LiveMarket } from "./LiveMarket";
 import { CryptoWalletSheet } from "./CryptoWalletSheet";
 
-function HoldingsView({ title, subtitle, items, unitLabel }: { title: string; subtitle: string; items: Holding[]; unitLabel: (h: Holding) => string }) {
-  const total = round2(items.reduce((s, h) => s + h.quantity * h.price, 0));
+/** Colours for the allocation bar and the asset chips, in order. */
+const COLOURS = ["#a78bfa", "#67e8f9", "#6ee7b7", "#fcd34d", "#f9a8d4", "#fb923c", "#93c5fd", "#c4b5fd"];
+
+function HoldingsView({ title, subtitle, items, unitLabel, empty }: { title: string; subtitle: string; items: Holding[]; unitLabel: (h: Holding) => string; empty?: { title: string; text: string } }) {
+  const values = items.map((h) => h.quantity * h.price);
+  const total = round2(values.reduce((s, v) => s + v, 0));
   const change = round2(items.reduce((s, h) => s + (h.quantity * h.price * h.change24h) / (100 + h.change24h), 0));
+  const changePct = total > 0 ? round2((change / (total - change)) * 100) : 0;
+  const up = change >= 0;
+
   return (
     <div className="space-y-6">
       <SectionHeader title={title} subtitle={subtitle} />
-      <section className="glass reveal p-6">
-        <p className="text-sm text-muted-foreground">Portfolio value</p>
-        <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Money value={total} className="text-gradient" /></p>
-        <p className={`mt-1 text-sm font-medium ${change >= 0 ? "text-success" : "text-destructive"}`}>
-          <Money value={change} signed /> today
-        </p>
+
+      {/* Hero: the total, today's change, and how the holdings are split. */}
+      <section className="glass reveal space-y-4 p-6" aria-label="Portfolio">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm text-muted-foreground">Portfolio value</p>
+            <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Money value={total} className="text-gradient" /></p>
+          </div>
+          {items.length > 0 && (
+            <span className={`rounded-full px-3 py-1 text-sm font-semibold tabular-nums ${up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+              {up ? "▲" : "▼"} {Math.abs(changePct).toFixed(2)}% today
+            </span>
+          )}
+        </div>
+        {total > 0 && (
+          <div className="flex h-3 overflow-hidden rounded-full bg-secondary" role="img" aria-label={items.map((h, i) => `${h.symbol} ${Math.round((values[i]! / total) * 100)}%`).join(", ")}>
+            {items.map((h, i) => (
+              <span key={h.symbol} style={{ width: `${(values[i]! / total) * 100}%`, background: COLOURS[i % COLOURS.length] }} />
+            ))}
+          </div>
+        )}
       </section>
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((h) => {
-          const up = h.change24h >= 0;
-          return (
-            <li key={h.symbol} className="glass reveal min-w-0 p-5">
-              <div className="flex items-center gap-3">
-                <span className="bg-accent-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-bold text-primary-foreground">{h.symbol}</span>
-                <div className="min-w-0">
+
+      {items.length === 0 && empty ? (
+        <div className="glass grid place-items-center gap-3 p-8 text-center">
+          <CoinIllustration className="h-24 w-24" />
+          <p className="font-medium">{empty.title}</p>
+          <p className="text-sm text-muted-foreground">{empty.text}</p>
+        </div>
+      ) : (
+        <ul className="glass divide-y divide-border overflow-hidden">
+          {items.map((h, i) => {
+            const rowUp = h.change24h >= 0;
+            const colour = COLOURS[i % COLOURS.length];
+            return (
+              <li key={h.symbol} className="row-hover flex min-w-0 items-center gap-3 p-4">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xs font-bold text-neutral-900" style={{ background: colour }} aria-hidden>{h.symbol}</span>
+                <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{h.name}</p>
-                  <p className="text-xs text-muted-foreground">{h.kind} · {unitLabel(h)}</p>
+                  <p className="truncate text-xs text-muted-foreground">{unitLabel(h)} · {formatMoney(h.price)}</p>
                 </div>
-              </div>
-              <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <div><dt className="text-xs text-muted-foreground">Price</dt><dd className="tabular-nums">{formatMoney(h.price)}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Value</dt><dd className="tabular-nums font-semibold"><Money value={h.quantity * h.price} /></dd></div>
-                <div><dt className="text-xs text-muted-foreground">24h</dt><dd className={`tabular-nums font-semibold ${up ? "text-success" : "text-destructive"}`}>{up ? "▲" : "▼"} {Math.abs(h.change24h).toFixed(2)}%</dd></div>
-              </dl>
-            </li>
-          );
-        })}
-      </ul>
+                <div className="shrink-0 text-right">
+                  <p className="font-semibold tabular-nums"><Money value={h.quantity * h.price} /></p>
+                  <p className={`text-xs font-medium tabular-nums ${rowUp ? "text-success" : "text-destructive"}`}>{rowUp ? "▲" : "▼"} {Math.abs(h.change24h).toFixed(2)}%</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <p className="text-xs text-muted-foreground">Prices are fictional demo values.</p>
     </div>
   );
@@ -81,8 +111,8 @@ export function CryptoSection() {
           <p className="text-xs text-muted-foreground">Receive crypto from another wallet address, or sell what you hold.</p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <button type="button" className="btn btn-ghost" onClick={() => setWallet("receive")}>Receive</button>
-          <button type="button" className="btn btn-primary" onClick={() => setWallet("sell")}>Sell</button>
+          <button type="button" className="btn btn-ghost rounded-full" onClick={() => setWallet("receive")}>Receive</button>
+          <button type="button" className="btn btn-primary rounded-full" onClick={() => setWallet("sell")}>Sell</button>
         </div>
       </section>
       {wallet && <CryptoWalletSheet initial={wallet} onClose={() => setWallet(null)} />}
@@ -96,5 +126,13 @@ const qtyLabel = (n: number) => n.toLocaleString("en-US", { maximumFractionDigit
 export function InvestSection() {
   const { investments } = useBank();
   const items = INVEST_HOLDINGS.map((h) => ({ ...h, quantity: investments[h.symbol] ?? 0 })).filter((h) => h.quantity > 0);
-  return <HoldingsView title="Investments" subtitle="Funds, bonds and stocks you hold." items={items} unitLabel={(h) => `${h.quantity} units`} />;
+  return (
+    <HoldingsView
+      title="Investments"
+      subtitle="Funds, bonds and stocks you hold."
+      items={items}
+      unitLabel={(h) => `${h.quantity} units`}
+      empty={{ title: "No investments yet", text: "Open an Investments account and buy your first fund, bond or stock." }}
+    />
+  );
 }
