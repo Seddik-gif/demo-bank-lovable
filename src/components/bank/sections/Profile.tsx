@@ -206,6 +206,44 @@ function SettingsGroup({ title, children }: { title: string; children: ReactNode
 }
 
 /** All app settings. Saved on this device; each one is applied where it is used. */
+/** The theme choice, the same one as Profile > Theme. The whole app takes the chosen colours at once. */
+function ThemeGroup() {
+  const [current, setCurrent] = useState<PaletteId>(storedPalette);
+  return (
+    <SettingsGroup title="Theme">
+      <div className="grid gap-2" role="radiogroup" aria-label="Theme">
+        {PALETTES.map((p) => {
+          const on = p.id === current;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => {
+                applyPalette(p.id);
+                setCurrent(p.id);
+              }}
+              className={`glass flex items-center gap-3 p-3 text-left ${on ? "ring-2 ring-accent" : "hover:bg-secondary"}`}
+            >
+              <span className="flex shrink-0 -space-x-2" aria-hidden>
+                {p.swatches.map((c) => (
+                  <span key={c} className="h-6 w-6 rounded-full border border-white/20" style={{ background: c }} />
+                ))}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{p.name}</span>
+                <span className="block text-xs text-muted-foreground">{p.description}</span>
+              </span>
+              {on && <Check className="h-4 w-4 shrink-0 text-accent" aria-label="Selected" />}
+            </button>
+          );
+        })}
+      </div>
+    </SettingsGroup>
+  );
+}
+
 function SettingsPanel() {
   const s = useSettings();
   const bank = useBank();
@@ -233,6 +271,7 @@ function SettingsPanel() {
 
   return (
     <div className="space-y-6">
+      <ThemeGroup />
       <SettingsGroup title="Display">
         <Select
           label="Language"

@@ -627,6 +627,12 @@ select.field option { background: var(--popover); color: var(--foreground); }
 [data-section="payments"] { --wash-a: #be185d; --wash-b: #3b0764; }
 [data-section="monitor"] { --wash-a: #0f766e; --wash-b: #042f2e; }
 
+/* Other palettes: every section takes the palette's own screen colour. Black metal keeps the section colours above. */
+:root[data-palette="midnight-ocean"] [data-section] { --wash-a: #1e3a8a; --wash-b: #0c1a3a; }
+:root[data-palette="emerald-night"] [data-section] { --wash-a: #065f46; --wash-b: #022c22; }
+:root[data-palette="ember"] [data-section] { --wash-a: #9a3412; --wash-b: #2a0f08; }
+:root[data-palette="silver-light"] [data-section] { --wash-a: #e5e7eb; --wash-b: #cbd5e1; }
+
 .section-orbs {
   position: fixed;
   inset: 0;

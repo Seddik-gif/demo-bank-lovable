@@ -25,8 +25,10 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
   - Done: radii, glass settings, type sizes, control spacing, and motion timings are in `src/styles/tokens.css`. The palette was already in `styles.css`.
   - Still literal: the card colours in `CardFace.tsx` (they move with the themes in step 7), and the glass blur (see note below).
   - Found: the glass blur was missing from the built CSS. The standard `backdrop-filter` line was being dropped next to its `-webkit-` copy, so the glass panels had no blur. It now shows, so the panels look more blurred than before.
-- [ ] 7. Add a second theme, and a theme switch in Settings.
+- [x] 7. Add a second theme, and a theme switch in Settings.
   - Check: switching themes restyles the whole app, cards included.
+  - Done: the app already had five palettes (Profile > Theme). Now the same choice is also in Settings > Theme, and each palette sets the full-screen colour of every section. Black metal keeps the original section colours. Account pages keep their own account colour, on every palette.
+  - Left for later (the cards, as agreed): the card colours do not change with the palette.
 
 ## Phase 4: Sound, haptics, illustrations (branch `feat/feel`)
 
