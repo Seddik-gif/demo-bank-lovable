@@ -2,40 +2,48 @@
 // Browsers only play sound after a click or key press, so the first sound may wait for the first tap.
 import { soundsEnabled } from "./settings";
 
-// [frequency Hz, start (s), length (s), wave shape, volume]
-type Tone = [number, number, number, OscillatorType?, number?];
+// One sound family. Every note comes from the same C major pentatonic scale, and every sound uses the same
+// soft voice (a triangle wave), the same fade in and out, and the same note spacing. So the sounds belong together.
+// The meaning is in the shape: rising for good news, falling for a problem, repeated notes for a stop.
+
+/** The notes the family uses, in Hz. C major pentatonic, from G4 up to C6. */
+export const NOTE = {
+  G4: 392.0,
+  A4: 440.0,
+  C5: 523.25,
+  D5: 587.33,
+  E5: 659.25,
+  G5: 783.99,
+  A5: 880.0,
+  C6: 1046.5,
+} as const;
+
+/** The shared voice: one wave, one level, one note spacing. */
+const VOICE = { wave: "triangle" as OscillatorType, level: 0.12, gap: 0.09 };
+
+// [note Hz, start (s), length (s), level]
+type Tone = [number, number, number, number];
+
+/** Notes played one after another in the same voice. */
+function run(notes: number[], length: number, level = VOICE.level): Tone[] {
+  return notes.map((f, i) => [f, i * VOICE.gap, i === notes.length - 1 ? length * 1.8 : length, level]);
+}
 
 const SOUNDS = {
   // Pip, the guide: a quick rising chirp.
-  pip: [
-    [660, 0, 0.08, "sine", 0.12],
-    [990, 0.07, 0.14, "sine", 0.12],
-  ],
-  // A payment or transfer that went through: a bright major chord.
-  success: [
-    [523.25, 0, 0.14, "triangle", 0.12],
-    [659.25, 0.1, 0.14, "triangle", 0.12],
-    [783.99, 0.2, 0.26, "triangle", 0.12],
-  ],
-  // A payment or transfer that failed: two low, short buzzes.
-  fail: [
-    [196, 0, 0.16, "sawtooth", 0.07],
-    [165, 0.2, 0.26, "sawtooth", 0.07],
-  ],
-  // Money received: a happy rising arpeggio.
-  receive: [
-    [659.25, 0, 0.1, "sine", 0.13],
-    [830.61, 0.1, 0.1, "sine", 0.13],
-    [987.77, 0.2, 0.1, "sine", 0.13],
-    [1318.5, 0.3, 0.24, "sine", 0.13],
-  ],
-  // A payment that was blocked: three flat, square beeps.
-  blocked: [
-    [330, 0, 0.12, "square", 0.05],
-    [330, 0.17, 0.12, "square", 0.05],
-    [262, 0.34, 0.24, "square", 0.05],
-  ],
+  pip: run([NOTE.G5, NOTE.C6], 0.1),
+  // A payment or transfer that went through: a rising major-feel triad.
+  success: run([NOTE.C5, NOTE.E5, NOTE.G5], 0.13),
+  // A payment or transfer that failed: a falling pair, a little quieter.
+  fail: run([NOTE.E5, NOTE.C5], 0.16, 0.1),
+  // Money received: a rising arpeggio that ends on the top note.
+  receive: run([NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6], 0.12),
+  // A payment that was blocked: three flat, repeated notes.
+  blocked: run([NOTE.A4, NOTE.A4, NOTE.G4], 0.13, 0.1),
 } satisfies Record<string, Tone[]>;
+
+/** Exported for the tests, so the family can be checked as a whole. */
+export const SOUND_FAMILY = { SOUNDS, VOICE };
 
 export type SoundName = keyof typeof SOUNDS;
 
@@ -61,10 +69,10 @@ export function playSound(name: SoundName): void {
   const c = audioContext();
   if (!c) return;
   const t0 = c.currentTime;
-  for (const [freq, start, length, wave = "sine", volume = 0.12] of SOUNDS[name] as Tone[]) {
+  for (const [freq, start, length, volume] of SOUNDS[name]) {
     const osc = c.createOscillator();
     const gain = c.createGain();
-    osc.type = wave;
+    osc.type = VOICE.wave;
     osc.frequency.setValueAtTime(freq, t0 + start);
     // A short fade in and out keeps each tone from clicking.
     gain.gain.setValueAtTime(0.0001, t0 + start);

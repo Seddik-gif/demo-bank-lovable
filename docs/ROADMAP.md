@@ -32,7 +32,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 
 ## Phase 4: Sound, haptics, illustrations (branch `feat/feel`)
 
-- [ ] 8. A consistent sound set in place of the generated tones, with a switch to turn it off.
+- [x] 8. A consistent sound set in place of the generated tones, with a switch to turn it off.
+  - Done: all five sounds now come from one scale, use one voice, one level and one note spacing, and their shapes match their meaning (rising for good news, falling for a problem, repeated notes for a stop). The Sounds switch in Settings still turns them off. Tests check the family (7 tests).
+  - Not done: recorded sound files. The sounds are still made in the browser, so they are simple tones, not a sound designer's recordings.
 - [ ] 9. Light haptic feedback on phones that support it: payment success, a frozen card, an error.
 - [ ] 10. Illustrations for empty states, onboarding, and the "Get your card now" banner.
 
