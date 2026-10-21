@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ArrowUpDown, BookOpen, Snowflake } from "lucide-react";
-import { motion } from "framer-motion";
+import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
 import { MoveSheet } from "./MoveSheet";
 import { AccountGuide } from "./AccountGuide";
 import { CRYPTO_HOLDINGS, INVEST_HOLDINGS, formatMoney, type Account, type AccountKind, type SectionId, type Transaction } from "@/lib/bank/data";
@@ -10,7 +10,6 @@ import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { TransactionList } from "../TransactionList";
 import { CryptoWalletSheet } from "./CryptoWalletSheet";
-import { mouseDragHandlers } from "@/lib/bank/dragScroll";
 
 const KIND_LABEL: Record<AccountKind, string> = {
   current: "Current account",
@@ -37,15 +36,49 @@ function activityOf(a: Account, transactions: Transaction[]): Transaction[] {
 /** The account pages on Home. Swipe sideways to move from one account to the next. */
 export function AccountPager({ onNavigate, actions }: { onNavigate: (id: SectionId) => void; actions?: ReactNode }) {
   const { accounts, transactions, crypto, investments } = useBank();
-  const [pos, setPos] = useState(0);
-  const track = useRef<HTMLDivElement>(null);
-  const frame = useRef(0);
-  // Mouse drag swiping. Created once so the drag state survives between pointer events.
-  const [drag] = useState(() => mouseDragHandlers(() => track.current));
+  const reduce = useReducedMotion();
+  const viewport = useRef<HTMLDivElement>(null);
+  // The track's horizontal position, in pixels. Dragging moves it directly, and a spring settles it on a page.
+  const x = useMotionValue(0);
+  const [width, setWidth] = useState(0);
+  const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
+  // The page a drag started on, so one swipe moves exactly one page.
+  const startRef = useRef(0);
   // The main current account always comes first; the rest keep their opening order.
   const ordered = [...accounts].sort((a, b) => Number(a.id !== "main") - Number(b.id !== "main"));
-  const active = Math.min(ordered.length - 1, Math.round(pos));
+  const count = ordered.length;
   const activeKind = ordered[active]?.kind ?? "current";
+
+  // Keep the page lined up with its width, including on resize.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const w = viewport.current?.clientWidth ?? 0;
+      setWidth(w);
+      x.set(-activeRef.current * w);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [x]);
+
+  // The dots follow the track while it moves, so they always show the page under the finger.
+  useMotionValueEvent(x, "change", (v) => {
+    if (!width) return;
+    const i = Math.max(0, Math.min(count - 1, Math.round(-v / width)));
+    if (i !== activeRef.current) {
+      activeRef.current = i;
+      setActive(i);
+    }
+  });
+
+  // Spring to a page. A flick carries the track further, so a quick swipe goes on to the next page.
+  const snapTo = (i: number, velocity = 0) => {
+    const target = Math.max(0, Math.min(count - 1, i));
+    activeRef.current = target;
+    setActive(target);
+    animate(x, -target * width, reduce ? { duration: 0 } : { type: "spring", stiffness: 320, damping: 36, mass: 0.9, velocity });
+  };
 
   // The whole screen takes the colour of the account you are on, and fades to the next one as you swipe.
   useEffect(() => {
@@ -66,39 +99,38 @@ export function AccountPager({ onNavigate, actions }: { onNavigate: (id: Section
     [],
   );
 
-  // While swiping, the page you are leaving shrinks and fades and the one you are reaching comes forward.
-  // Written straight to the DOM on each frame, so the motion follows your finger without re-rendering.
-  const onScroll = () => {
-    const el = track.current;
-    if (!el || !el.clientWidth) return;
-    cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => {
-      const width = el.clientWidth;
-      const origin = el.getBoundingClientRect().left;
-      Array.from(el.children).forEach((child, i) => {
-        const slide = child as HTMLElement;
-        const distance = Math.min(1, Math.abs((slide.getBoundingClientRect().left - origin) / width));
-        slide.style.transform = `scale(${1 - 0.06 * distance})`;
-        slide.style.opacity = String(1 - 0.4 * distance);
-        if (i === Math.round(el.scrollLeft / width)) setPos(i);
-      });
-    });
-  };
-  const goTo = (i: number) => track.current?.scrollTo({ left: i * (track.current?.clientWidth ?? 0), behavior: "smooth" });
 
   return (
     <section aria-label="Your accounts" className="space-y-3">
-      <div ref={track} onScroll={onScroll} {...drag} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain" aria-label="Accounts">
-        {ordered.map((a) => (
-          <div key={a.id} className="w-full shrink-0 snap-center px-4 transition-[transform,opacity] duration-200 ease-out will-change-transform">
-            <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} actions={actions} />
-          </div>
-        ))}
+      <div ref={viewport} className="-mx-4 overflow-hidden" aria-label="Accounts">
+        <motion.div
+          className="flex touch-pan-y"
+          style={{ x }}
+          drag="x"
+          dragConstraints={{ left: -(count - 1) * width, right: 0 }}
+          dragElastic={0.12}
+          onDragStart={() => {
+            startRef.current = activeRef.current;
+          }}
+          onDragEnd={(_, info) => {
+            const w = width || 1;
+            // A firm swipe moves one page in its direction. A slow drag settles on the nearest page.
+            const firm = Math.abs(info.offset.x) > w * 0.2 || Math.abs(info.velocity.x) > 400;
+            const target = firm ? startRef.current + (info.offset.x < 0 ? 1 : -1) : Math.round(-x.get() / w);
+            snapTo(target, info.velocity.x);
+          }}
+        >
+          {ordered.map((a, i) => (
+            <PagerSlide key={a.id} x={x} index={i} width={width}>
+              <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} actions={actions} />
+            </PagerSlide>
+          ))}
+        </motion.div>
       </div>
       {ordered.length > 1 && (
         <div className="flex justify-center gap-2" role="tablist" aria-label="Choose an account">
           {ordered.map((a, i) => (
-            <button key={a.id} type="button" role="tab" aria-selected={i === active} aria-label={a.name} onClick={() => goTo(i)} className="relative h-2 w-2 rounded-full bg-muted-foreground/40">
+            <button key={a.id} type="button" role="tab" aria-selected={i === active} aria-label={a.name} onClick={() => snapTo(i)} className="relative h-2 w-2 rounded-full bg-muted-foreground/40">
               {/* One pill slides between the dots on a spring, instead of each dot resizing on its own. */}
               {i === active && <motion.span layoutId="account-pill" className="absolute left-0 top-0 h-2 w-6 rounded-full bg-accent" transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
             </button>
@@ -106,6 +138,21 @@ export function AccountPager({ onNavigate, actions }: { onNavigate: (id: Section
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * One page of the pager. As the track moves, the page you are leaving shrinks and fades,
+ * and the one you are reaching grows to full size. The values come straight from the track's position.
+ */
+function PagerSlide({ x, index, width, children }: { x: MotionValue<number>; index: number; width: number; children: ReactNode }) {
+  const distance = (v: number) => Math.min(1, Math.abs((v + index * width) / (width || 1)));
+  const scale = useTransform(x, (v) => 1 - 0.06 * distance(v));
+  const opacity = useTransform(x, (v) => 1 - 0.4 * distance(v));
+  return (
+    <motion.div className="shrink-0 px-4" style={{ width, scale, opacity }}>
+      {children}
+    </motion.div>
   );
 }
 
