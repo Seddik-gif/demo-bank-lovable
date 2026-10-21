@@ -61,7 +61,8 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 - [x] 13. Budgets.
   - Done: a donut chart, "Where your money went", at the top of the screen. Each slice is a spending category, biggest first, with a centre total and a legend showing each category's share and whether it is in or over its budget. Transfers between your own accounts are left out, since they are not spending. The biggest six categories get a slice; the rest are grouped as "Other". The old bar chart at the bottom is replaced by this.
   - Tested: the rules for the slices (8 tests in total for this, 88 tests overall), and the chart in the preview with three categories.
-- [ ] 14. Activity.
+- [x] 14. Activity.
+  - Done: a summary card (net, money in, money out), type filters as pills, search and category in rounded fields, transactions grouped by day, and the receipt illustration when there is no activity at all. Checked in the preview: the summary is right, and the "Money in" pill narrows the list. The transaction details and the search still work as before.
 - [ ] 15. Crypto and Invest.
 - [ ] 16. Profile sub-windows (Accounts, Theme, Settings, and the rest).
 
