@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
 import { focusCard, startCardFlight } from "@/lib/bank/cardFocus";
-import { CardFace } from "../CardFace";
+import { CardVisual } from "../Card3D";
 import { AddCardSheet } from "./AddCardSheet";
 import { PlansSheet } from "./Plans";
 import { initials, round2, spentInCategory, type SectionId, type Transaction } from "@/lib/bank/data";
@@ -206,7 +206,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
               className="relative isolate z-0 w-64 shrink-0 rounded-[1.1rem] text-left"
               aria-label={`${c.label} ending ${c.last4}, ${c.frozen ? "frozen" : "active"}. Open this card.`}
             >
-              <CardFace card={c} holder={getProfileName().toUpperCase()} />
+              <CardVisual card={c} />
             </button>
           ))}
         </div>

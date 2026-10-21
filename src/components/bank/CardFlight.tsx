@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { endCardFlight, getCardFlight, subscribeCardFlight } from "@/lib/bank/cardFocus";
-import { CardFace } from "./CardFace";
+import { CardVisual } from "./Card3D";
 
 /**
  * A copy of a card that glides from where it was tapped to its place on the Cards page.
@@ -33,7 +33,7 @@ export function CardFlightLayer() {
         if (flight.to) endCardFlight();
       }}
     >
-      <CardFace card={flight.card} className="h-full" />
+      <CardVisual card={flight.card} className="h-full" />
     </motion.div>,
     document.body,
   );
