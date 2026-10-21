@@ -239,6 +239,8 @@ export function createEmptyState(): BankState {
     // A new account starts with only the main current account.
     accounts: d.accounts.filter((a) => a.id === "main").map((a) => ({ ...a, balance: 0 })),
     transactions: [],
+    // No cards until the customer orders one.
+    cards: [],
     budgets: [],
     crypto: {},
     contacts: [],

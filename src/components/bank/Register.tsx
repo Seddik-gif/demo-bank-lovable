@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Check, ChevronLeft } from "lucide-react";
-import { PLAN_IDS, type PlanId } from "@/lib/bank/data";
+import type { PlanId } from "@/lib/bank/data";
 import { track } from "@/lib/bank/monitor";
 import { useBank } from "@/lib/bank/store";
 import { setProfileName } from "@/lib/bank/profile";
 import { updateSettings } from "@/lib/bank/settings";
-import { PLANS, PLAN_NAMES, PlanCarousel } from "./sections/Plans";
+import { PLAN_NAMES } from "./sections/Plans";
 
 // Testing build: no real SMS, email, camera or ID checks. These codes are fixed on purpose.
 const DEMO_CODE = "123456";
@@ -18,15 +18,6 @@ const COUNTRIES = [
   { code: "DE", name: "Germany", dial: "+49" },
   { code: "TN", name: "Tunisia", dial: "+216" },
 ];
-
-// Two colours per plan for the page wash on the plan step. Each plan keeps its own mood.
-// The first colour fills the whole page; the second is used for the buttons and highlights.
-const PLAN_TINT: Record<PlanId, [string, string]> = {
-  everyday: ["oklch(0.4 0.03 250)", "oklch(0.62 0.05 230)"],
-  plus: ["oklch(0.44 0.18 262)", "oklch(0.72 0.14 215)"],
-  pro: ["oklch(0.4 0.2 295)", "oklch(0.72 0.17 335)"],
-  private: ["oklch(0.4 0.09 75)", "oklch(0.82 0.13 85)"],
-};
 
 const PURPOSES = ["Everyday spending", "Travel", "Savings", "Receiving salary", "Bills", "Investing"];
 const OCCUPATIONS = ["Employed", "Self-employed", "Student", "Retired", "Other"];
@@ -51,7 +42,6 @@ const ORDER = [
   "regulatory",
   "identity",
   "processing",
-  "plan",
 ] as const;
 type StepId = (typeof ORDER)[number];
 
@@ -273,22 +263,22 @@ export function Register({ onDone, onCancel }: { onDone: (firstName: string) => 
   };
   const progress = index / (ORDER.length - 1);
 
-  // Processing finishes by itself after a short wait.
-  useEffect(() => {
-    if (step !== "processing") return;
-    const id = window.setTimeout(() => next(), 2200);
-    return () => window.clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
-
   const finish = (plan: PlanId) => {
-    // A new account starts with nothing in it: zero balances and no history.
+    // A new account starts with nothing in it: zero balances, no cards and no history.
     startNewAccount();
     setPlan(plan);
     track("register", `Account created for ${draft.firstName.trim()} ${draft.lastName.trim()} (${PLAN_NAMES[plan]} plan, identity check skipped for testing)`);
     setProfileName(`${draft.firstName} ${draft.lastName}`);
     onDone(draft.firstName.trim());
   };
+
+  // Processing finishes by itself after a short wait. The plan is chosen later, after the first card.
+  useEffect(() => {
+    if (step !== "processing") return;
+    const id = window.setTimeout(() => finish(draft.plan), 2200);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -337,8 +327,6 @@ export function Register({ onDone, onCancel }: { onDone: (firstName: string) => 
         return next();
       case "identity":
         return next();
-      case "plan":
-        return finish(draft.plan);
       default:
         return undefined;
     }
@@ -547,58 +535,21 @@ export function Register({ onDone, onCancel }: { onDone: (firstName: string) => 
         </Frame>
       );
 
-    case "plan": {
-      const index = Math.max(0, PLAN_IDS.indexOf(draft.plan));
-      const active = PLANS[index] ?? PLANS[0]!;
-      return (
-        <Frame progress={1} title="Choose your plan" subtitle="Swipe between plans. You can change it later in the profile." onSubmit={submit}
-          footer={
-            <>
-              <Primary>Choose {PLAN_NAMES[draft.plan]}</Primary>
-              <button type="button" className="w-full text-center text-sm font-medium text-accent underline-offset-4 hover:underline" onClick={() => finish("everyday")}>
-                Continue for free with {PLAN_NAMES.everyday}
-              </button>
-            </>
-          }>
-          <div className="-mx-7 py-2 text-white">
-            <PlanCarousel index={index} onIndexChange={(i) => patch({ plan: PLAN_IDS[i] ?? "everyday" })} />
-            <ul key={active.id} className="page-fade mt-3 space-y-2">
-              {active.benefits.map((b) => (
-                <li key={b} className="flex items-start gap-3 text-sm">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: active.accent }} aria-hidden />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Frame>
-      );
-    }
-
     default:
       return null;
     }
   })();
 
-  // A key per step remounts the wrapper, so every step, and the plan cards, fade in on arrival.
-  // On the plan step the page takes the colours of the plan in view (see .plan-theme in styles.css).
-  const tint = step === "plan" ? PLAN_TINT[draft.plan] : undefined;
-  const themeStyle = tint ? ({ "--plan-a": tint[0], "--plan-b": tint[1] } as CSSProperties) : undefined;
+  // A key per step remounts the wrapper, so every step fades in on arrival.
   return (
-    <div className={`relative w-full ${tint ? "plan-theme" : ""}`} style={themeStyle}>
-      {tint && <PlanBackdrop />}
+    <div className="relative w-full">
       {/* The same soft glow as the sign-in screen, so the two feel like one flow. */}
-      {!tint && <div className="pointer-events-none absolute -top-8 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-accent-gradient opacity-25 blur-3xl" aria-hidden />}
+      <div className="pointer-events-none absolute -top-8 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-accent-gradient opacity-25 blur-3xl" aria-hidden />
       <div key={step} className="page-fade relative z-10 w-full">
         {screen}
       </div>
     </div>
   );
-}
-
-/** One flat colour for the whole page on the plan step. It cross-fades to the next plan's colour as you swipe. */
-function PlanBackdrop() {
-  return <div aria-hidden className="fade-in pointer-events-none fixed inset-0 z-0" style={{ background: "var(--plan-a)" }} />;
 }
 
 function ResendButton({ left, onResend }: { left: number; onResend: () => void }) {

@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
+import { AddCardSheet } from "./AddCardSheet";
+import { PlansSheet } from "./Plans";
 import { initials, round2, spentInCategory, type SectionId, type Transaction } from "@/lib/bank/data";
 import { Money, useMoneyText } from "../Money";
 import { useBank } from "@/lib/bank/store";
@@ -93,8 +95,12 @@ function groupByDay(items: Transaction[]) {
 }
 
 export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: SectionId) => void; onSignOut: () => void }) {
-  const { accounts, transactions, cards, contacts, toggleCard } = useBank();
+  const { accounts, transactions, cards, contacts, toggleCard, plan, setPlan } = useBank();
   const fmt = useMoneyText();
+  const [cardOpen, setCardOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  // Set when a card is ordered, so the Plans page opens once the card wizard closes.
+  const cardOrdered = useRef(false);
   const [query, setQuery] = useState("");
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [sheet, setSheet] = useState<"receive" | "addfunds" | "more" | null>(null);
@@ -168,6 +174,22 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
           <h2 className="text-lg font-semibold">Your cards</h2>
           <button type="button" className="text-sm font-medium text-accent" onClick={() => onNavigate("cards")}>Manage</button>
         </div>
+        {cards.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => setCardOpen(true)}
+            className="glass row-hover flex w-full items-center gap-4 p-4 text-left"
+          >
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-gradient text-primary-foreground">
+              <CreditCard className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">Get your card now</span>
+              <span className="block text-xs text-muted-foreground">Order a card in a minute. Then choose your plan.</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          </button>
+        ) : (
         <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
           {cards.map((c) => (
             <button
@@ -184,6 +206,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
             </button>
           ))}
         </div>
+        )}
       </section>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -302,6 +325,30 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
       )}
 
       {sheet === "addfunds" && <AddFundsSheet onClose={() => setSheet(null)} />}
+
+      {/* Get your card, then choose your plan. */}
+      {cardOpen && (
+        <AddCardSheet
+          onAdded={() => { cardOrdered.current = true; }}
+          onClose={() => {
+            setCardOpen(false);
+            if (cardOrdered.current) {
+              cardOrdered.current = false;
+              setPlanOpen(true);
+            }
+          }}
+        />
+      )}
+      {planOpen && (
+        <PlansSheet
+          current={plan}
+          onClose={() => setPlanOpen(false)}
+          onChoose={(p) => {
+            setPlan(p);
+            setPlanOpen(false);
+          }}
+        />
+      )}
 
       {sheet === "more" && (
         <Sheet title="More" onClose={() => setSheet(null)}>
