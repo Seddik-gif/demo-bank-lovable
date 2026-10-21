@@ -38,21 +38,31 @@ export function CardFace({ card, className = "" }: { card: Card; holder?: string
       onPointerLeave={() => setTilt({ x: 0, y: 0 })}
     >
       <div
-        className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[1.1rem] border border-white/60 p-5"
+        className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[1.1rem] border-2 border-white/70 p-5"
         style={{
           background,
           backdropFilter: "blur(14px) saturate(190%)",
           WebkitBackdropFilter: "blur(14px) saturate(190%)",
           color: ink,
+          // A thick, bright edge: a light rim inside and a soft shadow outside, like a slab of glass.
           boxShadow:
-            "0 34px 44px -22px rgba(20,10,60,0.6), 0 10px 18px -10px rgba(20,10,60,0.35), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(255,255,255,0.2)",
+            "0 34px 44px -22px rgba(20,10,60,0.6), 0 10px 18px -10px rgba(20,10,60,0.35), inset 0 0 0 3px rgba(255,255,255,0.28), inset 0 2px 10px rgba(255,255,255,0.8), inset 0 -2px 6px rgba(255,255,255,0.35)",
         }}
       >
+        {/* Holographic shimmer: pastel rainbow light that moves across the glass. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-70 mix-blend-screen"
+          style={{
+            background:
+              "linear-gradient(115deg, rgba(255,190,240,0.7) 0%, rgba(190,235,255,0.7) 22%, rgba(210,255,220,0.65) 42%, rgba(255,240,190,0.65) 60%, rgba(220,200,255,0.7) 80%, rgba(255,190,240,0.7) 100%)",
+          }}
+        />
         {/* Sheen: a light band across the top-left, like light on glass. */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(120deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.12) 34%, transparent 52%)" }}
+          style={{ background: "linear-gradient(120deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.14) 34%, transparent 52%)" }}
         />
 
         <div className="relative flex items-start justify-between">
