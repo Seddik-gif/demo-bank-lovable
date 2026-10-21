@@ -42,7 +42,7 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Move money">
       <SheetBackdrop onClick={onClose} label="Close" />
-      <SheetPanel className="glass flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
+      <SheetPanel onClose={onClose} className="glass flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
         <div className="flex items-center justify-between gap-3 border-b border-border p-4">
           <h2 className="text-lg font-semibold">Move money</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>

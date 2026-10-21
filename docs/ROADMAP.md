@@ -13,8 +13,10 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
   - Check: `npm test` passes.
 - [x] 4. Contrast check on the cards and the coloured screens (text must be readable on each).
   - Check: every text and background pair reaches at least WCAG AA (4.5:1 for body text).
-- [ ] 5. Keyboard and screen-reader check of the main flows: sign-in, sending money, moving money, ordering a card.
+- [x] 5. Keyboard and screen-reader check of the main flows: sign-in, sending money, moving money, ordering a card.
   - Check: each flow can be finished with the keyboard alone.
+  - Found and fixed: sheets did not move focus into themselves, Tab could leave them, Escape did not close the Move money window, and focus was not returned to the button that opened them. A shared dialog helper (`src/components/bank/useDialog.ts`) now handles all four.
+  - Checked: every button and field on the eight main pages has an accessible name.
 
 ## Phase 3: Design system and themes (branch `feat/design-system`)
 

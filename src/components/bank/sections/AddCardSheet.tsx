@@ -64,7 +64,8 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Order a card">
       {/* A mandatory wizard has no backdrop click, so the customer has to finish the order. */}
       <SheetBackdrop onClick={mandatory ? undefined : onClose} label={mandatory ? "Card wizard" : "Close"} />
-      <SheetPanel className="glass flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
+      {/* A mandatory wizard cannot be closed with Escape either, so the customer has to finish the order. */}
+      <SheetPanel onClose={mandatory ? undefined : onClose} className="glass flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
         <div className="space-y-3 border-b border-border p-4">
           <div className="flex items-center justify-between gap-3">
             {step > 0 ? (

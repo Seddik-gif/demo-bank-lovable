@@ -15,7 +15,7 @@ export function AccountGuide({ kind, onClose, doneLabel = "Got it" }: { kind: Ac
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={`${guide.name} guide`}>
       <SheetBackdrop onClick={onClose} label="Close guide" blur="backdrop-blur-sm" />
-      <SheetPanel className="glass flex w-full max-w-md flex-col gap-5 overflow-hidden rounded-b-none p-6 pb-8 sm:rounded-3xl">
+      <SheetPanel onClose={onClose} className="glass flex w-full max-w-md flex-col gap-5 overflow-hidden rounded-b-none p-6 pb-8 sm:rounded-3xl">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">{guide.name} guide</p>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>

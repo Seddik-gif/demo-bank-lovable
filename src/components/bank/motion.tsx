@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useDialog } from "./useDialog";
 
 /** One spring for everything that slides in, so the sheets all feel the same. */
 export const SHEET_SPRING = { type: "spring", stiffness: 300, damping: 32, mass: 0.9 } as const;
@@ -25,10 +26,14 @@ export function SheetBackdrop({ onClick, label, blur = "backdrop-blur-md" }: { o
  * A sheet panel that springs up from the bottom (or scales in on a wide screen).
  * Under reduced motion it appears straight away.
  */
-export function SheetPanel({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function SheetPanel({ children, className = "", onClose }: { children: ReactNode; className?: string; onClose?: (() => void) | undefined }) {
   const reduce = useReducedMotion();
+  const panel = useRef<HTMLDivElement>(null);
+  // Focus moves into the sheet, stays in it, closes on Escape, and returns to the opener.
+  useDialog(panel, onClose);
   return (
     <motion.div
+      ref={panel}
       className={`relative ${className}`}
       initial={reduce ? false : { y: "100%", opacity: 0.6 }}
       animate={{ y: 0, opacity: 1 }}
