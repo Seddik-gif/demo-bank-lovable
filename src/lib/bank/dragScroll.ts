@@ -1,49 +1,65 @@
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
+/** Mouse dragging can be switched off (the phone preview's "Click mode"). Missing or true means on. */
+export function mouseSwipeOn(): boolean {
+  return (window as unknown as { __mouseSwipe?: boolean }).__mouseSwipe !== false;
+}
+
+/** How far the mouse must move before a press counts as a drag rather than a click. */
+const DRAG_START = 5;
+
 /**
  * Lets a horizontal snap carousel be swiped with a mouse: hold the button and drag.
+ * A press that doesn't move is a normal click, so buttons inside the carousel still work.
  * Touch and trackpads already scroll natively, so only mouse drags are handled here.
- * Releasing snaps to the nearest slide. A drag that moved the carousel doesn't also count as a click.
+ * Releasing after a drag snaps to the nearest slide, and the drag doesn't also count as a click.
  */
 export function mouseDragHandlers(el: () => HTMLElement | null) {
+  let pressed = false;
   let dragging = false;
-  let moved = false;
   let startX = 0;
   let startLeft = 0;
+  let pointer = -1;
+  let dragJustEnded = false;
 
   const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
+    if (!mouseSwipeOn() || e.pointerType !== "mouse" || e.button !== 0) return;
     const node = el();
-    if (!node || e.pointerType !== "mouse" || e.button !== 0) return;
-    dragging = true;
-    moved = false;
+    if (!node) return;
+    pressed = true;
+    dragging = false;
+    pointer = e.pointerId;
     startX = e.clientX;
     startLeft = node.scrollLeft;
-    node.style.scrollSnapType = "none";
-    node.style.scrollBehavior = "auto";
-    node.style.userSelect = "none";
-    node.style.cursor = "grabbing";
-    node.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: ReactPointerEvent<HTMLElement>) => {
     const node = el();
-    if (!dragging || !node) return;
+    if (!pressed || !node) return;
     const dx = e.clientX - startX;
-    if (Math.abs(dx) > 4) moved = true;
+    if (!dragging) {
+      if (Math.abs(dx) < DRAG_START) return;
+      // Only now does the carousel take over the pointer, so a plain click never reaches here.
+      dragging = true;
+      node.setPointerCapture(pointer);
+      node.style.scrollSnapType = "none";
+      node.style.scrollBehavior = "auto";
+      node.style.userSelect = "none";
+      node.style.cursor = "grabbing";
+    }
     node.scrollLeft = startLeft - dx;
   };
 
-  const release = (e: ReactPointerEvent<HTMLElement>) => {
+  const release = () => {
     const node = el();
+    pressed = false;
     if (!dragging || !node) return;
     dragging = false;
-    if (node.hasPointerCapture(e.pointerId)) node.releasePointerCapture(e.pointerId);
     node.style.cursor = "";
     node.style.userSelect = "";
     // Snap to the nearest slide, then hand snapping back to CSS.
     const width = node.clientWidth || 1;
-    const target = Math.round(node.scrollLeft / width) * width;
-    node.scrollTo({ left: target, behavior: "smooth" });
+    node.scrollTo({ left: Math.round(node.scrollLeft / width) * width, behavior: "smooth" });
     window.setTimeout(() => {
       node.style.scrollSnapType = "";
       node.style.scrollBehavior = "";
@@ -52,12 +68,16 @@ export function mouseDragHandlers(el: () => HTMLElement | null) {
 
   // A drag that moved the carousel should not also trigger a click on the slide under the pointer.
   const onClickCapture = (e: ReactMouseEvent<HTMLElement>) => {
-    if (moved) {
+    if (dragJustEnded) {
+      dragJustEnded = false;
       e.stopPropagation();
       e.preventDefault();
-      moved = false;
     }
   };
+  const onPointerUp = () => {
+    if (dragging) dragJustEnded = true;
+    release();
+  };
 
-  return { onPointerDown, onPointerMove, onPointerUp: release, onPointerCancel: release, onClickCapture };
+  return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: release, onClickCapture };
 }
