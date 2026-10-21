@@ -5,10 +5,10 @@ import type { Card, CardTone } from "@/lib/bank/data";
  * so the card looks like tinted glass. Each finish also has the colour its text should be.
  */
 const FINISH: Record<CardTone, { background: string; ink: string }> = {
-  violet: { background: "linear-gradient(135deg, rgba(224,33,138,0.5) 0%, rgba(157,43,214,0.46) 55%, rgba(74,20,216,0.5) 100%)", ink: "#ffffff" },
-  gold: { background: "linear-gradient(135deg, rgba(255,143,177,0.46) 0%, rgba(255,196,163,0.44) 45%, rgba(253,246,178,0.46) 100%)", ink: "#1e1b4b" },
-  cyan: { background: "linear-gradient(135deg, rgba(157,195,255,0.46) 0%, rgba(191,230,247,0.44) 50%, rgba(185,246,216,0.46) 100%)", ink: "#1e1b4b" },
-  emerald: { background: "linear-gradient(135deg, rgba(185,246,216,0.46) 0%, rgba(216,247,166,0.44) 55%, rgba(253,246,178,0.46) 100%)", ink: "#1e1b4b" },
+  violet: { background: "linear-gradient(135deg, rgba(224,33,138,0.26) 0%, rgba(157,43,214,0.24) 55%, rgba(74,20,216,0.26) 100%)", ink: "#ffffff" },
+  gold: { background: "linear-gradient(135deg, rgba(255,143,177,0.24) 0%, rgba(255,196,163,0.23) 45%, rgba(253,246,178,0.24) 100%)", ink: "#1e1b4b" },
+  cyan: { background: "linear-gradient(135deg, rgba(157,195,255,0.24) 0%, rgba(191,230,247,0.23) 50%, rgba(185,246,216,0.24) 100%)", ink: "#1e1b4b" },
+  emerald: { background: "linear-gradient(135deg, rgba(185,246,216,0.24) 0%, rgba(216,247,166,0.23) 55%, rgba(253,246,178,0.24) 100%)", ink: "#1e1b4b" },
 };
 
 /**
