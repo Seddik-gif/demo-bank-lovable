@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, X } from "lucide-react";
 import type { AccountKind } from "@/lib/bank/data";
 import { ACCOUNT_GUIDES } from "@/lib/bank/guides";
+import { SheetBackdrop, SheetPanel } from "../motion";
 
 /** A short walk-through of one type of account. Opened from the account page and right after opening an account. */
 export function AccountGuide({ kind, onClose, doneLabel = "Got it" }: { kind: AccountKind; onClose: () => void; doneLabel?: string }) {
@@ -13,8 +14,8 @@ export function AccountGuide({ kind, onClose, doneLabel = "Got it" }: { kind: Ac
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={`${guide.name} guide`}>
-      <button className="fade-in absolute inset-0 bg-background/70 backdrop-blur-sm" aria-label="Close guide" onClick={onClose} />
-      <div className="glass page-fade relative flex w-full max-w-md flex-col gap-5 overflow-hidden rounded-b-none p-6 pb-8 sm:rounded-3xl">
+      <SheetBackdrop onClick={onClose} label="Close guide" blur="backdrop-blur-sm" />
+      <SheetPanel className="glass flex w-full max-w-md flex-col gap-5 overflow-hidden rounded-b-none p-6 pb-8 sm:rounded-3xl">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">{guide.name} guide</p>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>
@@ -44,7 +45,7 @@ export function AccountGuide({ kind, onClose, doneLabel = "Got it" }: { kind: Ac
             <button type="button" className="btn btn-primary" onClick={() => setStep((s) => s + 1)}>Next</button>
           )}
         </div>
-      </div>
+      </SheetPanel>
     </div>,
     document.body,
   );

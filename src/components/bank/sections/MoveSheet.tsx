@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { mouseDragHandlers } from "@/lib/bank/dragScroll";
+import { SheetBackdrop, SheetPanel } from "../motion";
 import { createPortal } from "react-dom";
 import { ArrowDown, ArrowUp, ArrowUpDown, X } from "lucide-react";
 import { formatMoney, round2, type Account } from "@/lib/bank/data";
@@ -40,8 +41,8 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Move money">
-      <button className="fade-in absolute inset-0 bg-background/70 backdrop-blur-md" aria-label="Close" onClick={onClose} />
-      <div className="glass page-fade relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
+      <SheetBackdrop onClick={onClose} label="Close" />
+      <SheetPanel className="glass flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
         <div className="flex items-center justify-between gap-3 border-b border-border p-4">
           <h2 className="text-lg font-semibold">Move money</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>
@@ -97,7 +98,7 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
           )}
           {msg?.ok && <button type="button" className="btn btn-ghost w-full" onClick={onClose}>Done</button>}
         </div>
-      </div>
+      </SheetPanel>
     </div>,
     document.body,
   );

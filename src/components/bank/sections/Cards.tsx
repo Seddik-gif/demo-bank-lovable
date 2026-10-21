@@ -11,6 +11,7 @@ import { useBank } from "@/lib/bank/store";
 import { SectionHeader } from "../Layout";
 import { AddCardSheet } from "./AddCardSheet";
 import { CardFace, FINISH } from "../CardFace";
+import { motion, useReducedMotion } from "framer-motion";
 
 // A card is 22rem wide, close to the size of the screen. The track scrolls, and the card in front is centred.
 const SLOT = "22rem";
@@ -106,6 +107,7 @@ export function CardsSection() {
   const active = Math.min(slots - 1, Math.round(pos));
   const cardNow = active < cards.length ? cards[active] : undefined;
   const holder = getProfileName().toUpperCase();
+  const reduceMotion = useReducedMotion();
 
   // Swiping to another card turns the previous card back, and changes the glow to the new card's colour.
   useEffect(() => {
@@ -166,10 +168,16 @@ export function CardsSection() {
             const flipped = isActive && flippedId === c.id;
             return (
               <div key={c.id} className="shrink-0 snap-center transition-[transform,opacity] duration-300 ease-out" style={{ width: SLOT, ...pose(i - pos) }}>
-                <div className="relative aspect-[1.586] w-full transition-transform duration-700 ease-in-out" style={{ transformStyle: "preserve-3d", transform: `rotateY(${flipped ? 180 : 0}deg)` }}>
+                {/* The flip is a spring, so it settles with a small, natural bounce. */}
+                <motion.div
+                  className="relative aspect-[1.586] w-full"
+                  style={{ transformStyle: "preserve-3d" }}
+                  animate={{ rotateY: flipped ? 180 : 0 }}
+                  transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 170, damping: 20, mass: 0.9 }}
+                >
                   <MetalFront card={c} frozen={c.frozen} active={isActive} />
                   <MetalBack card={c} frozen={c.frozen} active={isActive} holder={holder} />
-                </div>
+                </motion.div>
               </div>
             );
           })}
