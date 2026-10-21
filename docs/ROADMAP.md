@@ -58,7 +58,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 - [x] 12. Payments.
   - Done: chat bubbles (your messages on the accent colour, theirs on a plain surface, each with its tail toward its sender), a rounded message box with a rounded send button, and the chat illustration on the "Choose a contact" screen. Checked: a message sends and shows in the new style, with no errors.
   - Not changed: the contact list layout and the Pay and Request panels. Those are next if you want more.
-- [ ] 13. Budgets.
+- [x] 13. Budgets.
+  - Done: a donut chart, "Where your money went", at the top of the screen. Each slice is a spending category, biggest first, with a centre total and a legend showing each category's share and whether it is in or over its budget. Transfers between your own accounts are left out, since they are not spending. The biggest six categories get a slice; the rest are grouped as "Other". The old bar chart at the bottom is replaced by this.
+  - Tested: the rules for the slices (8 tests in total for this, 88 tests overall), and the chart in the preview with three categories.
 - [ ] 14. Activity.
 - [ ] 15. Crypto and Invest.
 - [ ] 16. Profile sub-windows (Accounts, Theme, Settings, and the rest).

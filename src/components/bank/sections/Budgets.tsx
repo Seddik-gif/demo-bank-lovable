@@ -4,7 +4,8 @@ import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { SectionHeader } from "../Layout";
 import { BudgetIllustration } from "../Illustrations";
-import { GoalsPanel, SchedulesPanel, SpendingChart } from "./MoneyPlanning";
+import { GoalsPanel, SchedulesPanel } from "./MoneyPlanning";
+import { SpendingPie } from "./SpendingPie";
 
 function BudgetRow({ budget }: { budget: Budget }) {
   const { transactions, setLimit, deleteBudget } = useBank();
@@ -90,6 +91,7 @@ export function BudgetsSection() {
   return (
     <div className="space-y-6">
       <SectionHeader title="Budgets" subtitle="Monthly limits, tracked from your transactions." />
+      <SpendingPie />
       {budgets.length === 0 ? (
         <div className="glass grid place-items-center gap-2 p-6 text-center">
           <BudgetIllustration className="h-20 w-20" />
@@ -100,7 +102,6 @@ export function BudgetsSection() {
           {budgets.map((b) => <BudgetRow key={b.id} budget={b} />)}
         </ul>
       )}
-      <SpendingChart />
       <GoalsPanel />
       <SchedulesPanel />
 
