@@ -18,11 +18,13 @@ export interface Settings {
   notify: { payments: boolean; requests: boolean; trades: boolean; news: boolean };
   biometricUnlock: boolean;
   sounds: boolean;
+  haptics: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   biometricUnlock: true,
   sounds: true,
+  haptics: true,
   language: "en",
   numberFormat: "us",
   hideBalances: false,
@@ -57,6 +59,7 @@ function load(): Settings {
       defaultOrderUsd: typeof p.defaultOrderUsd === "number" && p.defaultOrderUsd >= 0 ? p.defaultOrderUsd : d.defaultOrderUsd,
       biometricUnlock: typeof p.biometricUnlock === "boolean" ? p.biometricUnlock : d.biometricUnlock,
       sounds: typeof p.sounds === "boolean" ? p.sounds : d.sounds,
+      haptics: typeof p.haptics === "boolean" ? p.haptics : d.haptics,
       notify: {
         payments: typeof p.notify?.payments === "boolean" ? p.notify.payments : d.notify.payments,
         requests: typeof p.notify?.requests === "boolean" ? p.notify.requests : d.notify.requests,
@@ -114,6 +117,11 @@ const getSnapshot = () => current;
 /** Read by the sound effects, which run outside React. */
 export function soundsEnabled(): boolean {
   return current.sounds;
+}
+
+/** Read by the haptics, which run outside React. */
+export function hapticsEnabled(): boolean {
+  return current.haptics;
 }
 
 export function useSettings(): Settings {

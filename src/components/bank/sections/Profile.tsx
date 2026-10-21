@@ -290,6 +290,7 @@ function SettingsPanel() {
         <Toggle label="Hide balances" description="Show ********** instead of amounts. Click any amount to toggle." checked={s.hideBalances} onChange={(v) => set({ hideBalances: v })} />
         <Toggle label="Reduce motion" description="Turns off the sheen, tilt and fade effects" checked={s.reduceMotion} onChange={(v) => set({ reduceMotion: v })} />
         <Toggle label="Sounds" description="Short tones for payments, notifications and Pip" checked={s.sounds} onChange={(v) => set({ sounds: v })} />
+        <Toggle label="Haptics" description="A light vibration on phones that support it" checked={s.haptics} onChange={(v) => set({ haptics: v })} />
       </SettingsGroup>
 
       <SettingsGroup title="Payments">

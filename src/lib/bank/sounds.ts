@@ -1,6 +1,7 @@
 // Short sound effects made with the browser's own audio (no files to download).
 // Browsers only play sound after a click or key press, so the first sound may wait for the first tap.
 import { soundsEnabled } from "./settings";
+import { buzz, type HapticName } from "./haptics";
 
 // One sound family. Every note comes from the same C major pentatonic scale, and every sound uses the same
 // soft voice (a triangle wave), the same fade in and out, and the same note spacing. So the sounds belong together.
@@ -64,7 +65,18 @@ function audioContext(): AudioContext | null {
   return ctx;
 }
 
+/** The vibration that goes with each sound. Pip has none: it is a guide, not a result. */
+const HAPTIC_FOR: Partial<Record<SoundName, HapticName>> = {
+  success: "success",
+  receive: "success",
+  fail: "error",
+  blocked: "error",
+};
+
 export function playSound(name: SoundName): void {
+  // A vibration does not depend on the sound switch: each can be turned off on its own.
+  const haptic = HAPTIC_FOR[name];
+  if (haptic) buzz(haptic);
   if (!soundsEnabled()) return;
   const c = audioContext();
   if (!c) return;

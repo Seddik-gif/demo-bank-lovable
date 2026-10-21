@@ -34,6 +34,7 @@ import {
 } from "./data";
 import { loadState, saveState } from "./storage";
 import { track } from "./monitor";
+import { buzz } from "./haptics";
 import { amountText, notify } from "./notifications";
 import { applyFunding, FUNDING_LABEL, settleDue, validateFunding, type FundingRequest } from "./funding";
 import { applyDeposit, settleCryptoDeposits, validateDeposit } from "./crypto";
@@ -156,6 +157,8 @@ export function BankProvider({ children }: { children: ReactNode }) {
     const card = stateRef.current.cards.find((c) => c.id === id);
     if (!card) return;
     setState((s) => ({ ...s, cards: s.cards.map((c) => (c.id === id ? { ...c, frozen: !c.frozen } : c)) }));
+    // Freezing a card gives one firm pulse, to confirm it is now blocked.
+    if (!card.frozen) buzz("frozen");
     track("card", `${card.label} ${card.frozen ? "unfrozen" : "frozen"}`);
   }, []);
 

@@ -35,7 +35,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 - [x] 8. A consistent sound set in place of the generated tones, with a switch to turn it off.
   - Done: all five sounds now come from one scale, use one voice, one level and one note spacing, and their shapes match their meaning (rising for good news, falling for a problem, repeated notes for a stop). The Sounds switch in Settings still turns them off. Tests check the family (7 tests).
   - Not done: recorded sound files. The sounds are still made in the browser, so they are simple tones, not a sound designer's recordings.
-- [ ] 9. Light haptic feedback on phones that support it: payment success, a frozen card, an error.
+- [x] 9. Light haptic feedback on phones that support it: payment success, a frozen card, an error.
+  - Done: a short vibration for a successful payment or money in, a firmer double pulse for a refused or blocked payment, and one pulse when a card is frozen. A Haptics switch in Settings turns it off, separately from Sounds. Tests check the patterns (82 tests in total).
+  - Not checked on a real phone yet. Desktop browsers do not vibrate, so please try it on your phone.
 - [ ] 10. Illustrations for empty states, onboarding, and the "Get your card now" banner.
 
 ## Phase 1: Motion (branch `feat/motion`), finish
