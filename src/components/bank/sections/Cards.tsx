@@ -44,7 +44,7 @@ function MetalBack({ card, holder }: { card: Card; frozen: boolean; active: bool
   const { background, ink } = FINISH[card.tone];
   return (
     <div
-      className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-[1.1rem] border border-white/60 p-5"
+      className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-[1.1rem] border-2 border-white/70 p-5"
       style={{
         ...faceStyle,
         transform: "rotateY(180deg)",
@@ -52,12 +52,23 @@ function MetalBack({ card, holder }: { card: Card; frozen: boolean; active: bool
         color: ink,
         backdropFilter: "blur(14px) saturate(190%)",
         WebkitBackdropFilter: "blur(14px) saturate(190%)",
-        boxShadow: "0 34px 44px -22px rgba(20,10,60,0.6), inset 0 1px 0 rgba(255,255,255,0.7)",
+        // Same thick, bright glass edge as the front.
+        boxShadow:
+          "0 34px 44px -22px rgba(20,10,60,0.6), 0 10px 18px -10px rgba(20,10,60,0.35), inset 0 0 0 3px rgba(255,255,255,0.28), inset 0 2px 10px rgba(255,255,255,0.8), inset 0 -2px 6px rgba(255,255,255,0.35)",
       }}
       role="group"
       aria-label={`${card.label} details`}
     >
-      <div className="space-y-3">
+      {/* Same holographic shimmer as the front. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-70 mix-blend-screen"
+        style={{
+          background:
+            "linear-gradient(115deg, rgba(255,190,240,0.7) 0%, rgba(190,235,255,0.7) 22%, rgba(210,255,220,0.65) 42%, rgba(255,240,190,0.65) 60%, rgba(220,200,255,0.7) 80%, rgba(255,190,240,0.7) 100%)",
+        }}
+      />
+      <div className="relative space-y-3">
         <div className="flex items-center gap-3">
           <div className="h-9 flex-1 rounded-sm bg-white/80 px-3 py-1.5 text-right font-mono text-sm text-black/80">{cvvOf(card)}</div>
           <p className="text-[10px] uppercase tracking-widest opacity-80">CVV</p>
@@ -68,7 +79,7 @@ function MetalBack({ card, holder }: { card: Card; frozen: boolean; active: bool
           <p className="flex justify-between gap-3"><span className="opacity-70">Expires</span><span className="font-mono">{expiryOf(card)}</span></p>
         </div>
       </div>
-      <div className="flex items-center justify-between text-xs opacity-80">
+      <div className="relative flex items-center justify-between text-xs opacity-80">
         <span>{card.type}</span>
         <span className="font-display text-base font-bold italic">{card.network}</span>
       </div>
