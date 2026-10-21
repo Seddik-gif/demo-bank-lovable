@@ -10,7 +10,7 @@ import { getProfileName } from "@/lib/bank/profile";
 import { useBank } from "@/lib/bank/store";
 import { SectionHeader } from "../Layout";
 import { AddCardSheet } from "./AddCardSheet";
-import { CardFace, FINISH } from "../CardFace";
+import { CardFace, FINISH, cardBackground } from "../CardFace";
 import { motion, useReducedMotion } from "framer-motion";
 
 // A card is 22rem wide, close to the size of the screen. The track scrolls, and the card in front is centred.
@@ -42,7 +42,8 @@ function MetalFront({ card, active }: { card: Card; frozen: boolean; active: boo
 
 /** The back of a card: the details, on the same coloured glass. */
 function MetalBack({ card, holder }: { card: Card; frozen: boolean; active: boolean; holder: string }) {
-  const { background, ink } = FINISH[card.tone];
+  const { ink } = FINISH[card.tone];
+  const background = cardBackground(card.tone);
   return (
     <div
       className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-[1.1rem] border-2 border-white/70 p-5"

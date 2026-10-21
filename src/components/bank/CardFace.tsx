@@ -5,6 +5,15 @@ import type { Card, CardTone } from "@/lib/bank/data";
  * The card palette from the reference, made see-through: each gradient keeps its colours but at about 80% opacity,
  * so the card looks like tinted glass. Each finish also has the colour its text should be.
  */
+/** The colour that sits under the tint on the light cards, so dark text stays readable over a coloured screen. */
+const FROST: Record<CardTone, number> = { violet: 0, gold: 0.62, cyan: 0.62, emerald: 0.62 };
+
+/** The card's background: its palette tint, with a light frost underneath the light finishes. */
+export function cardBackground(tone: CardTone): string {
+  const frost = FROST[tone];
+  return frost ? `${FINISH[tone].background}, linear-gradient(rgba(255,255,255,${frost}), rgba(255,255,255,${frost}))` : FINISH[tone].background;
+}
+
 export const FINISH: Record<CardTone, { background: string; ink: string }> = {
   violet: { background: "linear-gradient(135deg, rgba(224,33,138,0.44) 0%, rgba(157,43,214,0.42) 55%, rgba(74,20,216,0.46) 100%)", ink: "#ffffff" },
   gold: { background: "linear-gradient(135deg, rgba(255,143,177,0.42) 0%, rgba(255,196,163,0.4) 45%, rgba(253,246,178,0.42) 100%)", ink: "#1e1b4b" },
@@ -17,7 +26,8 @@ export const FINISH: Record<CardTone, { background: string; ink: string }> = {
  * and the network logo, contactless arcs and card number on top. It straightens when you hover over it.
  */
 export function CardFace({ card, className = "" }: { card: Card; holder?: string; className?: string }) {
-  const { background, ink } = FINISH[card.tone];
+  const { ink } = FINISH[card.tone];
+  const background = cardBackground(card.tone);
   const digits = `•••• •••• •••• ${card.last4}`;
   // The card leans toward the pointer and settles flat when the pointer leaves. Limited to 8 degrees.
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -71,7 +81,7 @@ export function CardFace({ card, className = "" }: { card: Card; holder?: string
         </div>
 
         <div className="relative flex items-center justify-between">
-          <p className="font-mono text-[11px] font-medium tracking-[0.16em]" style={{ color: card.tone === "violet" ? "rgba(255,255,255,0.85)" : "rgba(30,27,75,0.75)" }}>{digits}</p>
+          <p className="font-mono text-[11px] font-medium tracking-[0.16em]" style={{ color: card.tone === "violet" ? "rgba(255,255,255,0.92)" : "#1e1b4b" }}>{digits}</p>
           <svg viewBox="0 0 24 24" className="h-6 w-6 opacity-80" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
             <path d="M8.5 9.5a4 4 0 0 1 0 5" />
             <path d="M11.5 7a7.5 7.5 0 0 1 0 10" />

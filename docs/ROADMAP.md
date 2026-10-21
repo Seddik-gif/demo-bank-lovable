@@ -11,7 +11,7 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
   - Check: `npm test` passes, and sign-up still rejects a weak passcode.
 - [x] 3. Test saving and loading the app's data (bad or missing data falls back to the demo).
   - Check: `npm test` passes.
-- [ ] 4. Contrast check on the cards and the coloured screens (text must be readable on each).
+- [x] 4. Contrast check on the cards and the coloured screens (text must be readable on each).
   - Check: every text and background pair reaches at least WCAG AA (4.5:1 for body text).
 - [ ] 5. Keyboard and screen-reader check of the main flows: sign-in, sending money, moving money, ordering a card.
   - Check: each flow can be finished with the keyboard alone.
