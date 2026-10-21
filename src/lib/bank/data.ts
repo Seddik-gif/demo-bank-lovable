@@ -176,7 +176,7 @@ export function createDefaultState(): BankState {
   return {
     accounts: [
       { id: "main", name: "Main current account", iban: "DB42 DEMO 0001 4286 5012", balance: 4286.5 },
-      { id: "savings", name: "Savings", iban: "DB17 DEMO 0002 1285 0034", balance: 12850 },
+      { id: "savings", name: "Savings", iban: "DB17 DEMO 0002 1285 0034", balance: 12850, kind: "savings", rate: 0.0225 },
       { id: "travel", name: "Travel pot", iban: "DB88 DEMO 0003 0615 2577", balance: 615.25 },
     ],
     transactions: [
