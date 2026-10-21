@@ -1,0 +1,221 @@
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { Eye, EyeOff, Plus, Settings2, Snowflake } from "lucide-react";
+import { setGlowTone } from "@/lib/bank/cardGlow";
+import { CardSettingsSheet } from "./CardSettingsSheet";
+import type { Card } from "@/lib/bank/data";
+import { MAX_CARDS } from "@/lib/bank/money";
+import { getProfileName } from "@/lib/bank/profile";
+import { useBank } from "@/lib/bank/store";
+import { SectionHeader } from "../Layout";
+import { AddCardSheet } from "./AddCardSheet";
+
+// A card is 22rem wide, close to the size of the screen. The track scrolls, and the card in front is centred.
+const SLOT = "22rem";
+const GAP = 20;
+
+/** The 3D pose of a slot: the further it is from the centre, the more it turns away and sinks back. */
+function pose(distance: number) {
+  const d = Math.max(-2, Math.min(2, distance));
+  const away = Math.min(Math.abs(d), 2);
+  return {
+    transform: `perspective(1000px) translateZ(${-away * 90}px) rotateY(${Math.max(-70, Math.min(70, d * -38))}deg) scale(${1 - away * 0.08})`,
+    opacity: 1 - away * 0.22,
+  };
+}
+
+const cardNumber = (card: Card) => card.number ?? `•••• •••• •••• ${card.last4}`;
+const expiryOf = (card: Card) => card.expiry ?? "••/••";
+const cvvOf = (card: Card) => card.cvv ?? "•••";
+
+function MetalFront({ card, frozen, active }: { card: Card; frozen: boolean; active: boolean }) {
+  return (
+    <div className={`metal-card tone-${card.tone} ${frozen ? "is-frozen" : ""} ${active ? "is-active" : ""} absolute inset-0 flex flex-col justify-between p-6`} style={faceStyle} role="img" aria-label={`${card.label} ending ${card.last4}${frozen ? ", frozen" : ""}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate font-display text-xl font-semibold drop-shadow">{card.label}</p>
+          <p className="text-xs opacity-80">{card.type}</p>
+        </div>
+        {frozen && (
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-black/35 px-2 py-0.5 text-xs font-semibold">
+            <Snowflake className="h-3 w-3" aria-hidden /> Frozen
+          </span>
+        )}
+      </div>
+      <span className="h-9 w-12 rounded-md bg-gradient-to-br from-yellow-100 via-amber-200 to-yellow-500 shadow-inner" aria-hidden />
+      <div className="flex items-end justify-between gap-2">
+        <p className="font-mono text-lg tracking-widest drop-shadow">•••• •••• •••• {card.last4}</p>
+        <p className="shrink-0 font-display text-xl font-bold italic drop-shadow">{card.network}</p>
+      </div>
+    </div>
+  );
+}
+
+function MetalBack({ card, frozen, active, holder }: { card: Card; frozen: boolean; active: boolean; holder: string }) {
+  return (
+    <div className={`metal-card tone-${card.tone} ${frozen ? "is-frozen" : ""} ${active ? "is-active" : ""} absolute inset-0 flex flex-col justify-between overflow-hidden`} style={{ ...faceStyle, transform: "rotateY(180deg)" }} role="group" aria-label={`${card.label} details`}>
+      <div className="mt-6 h-11 bg-black/85" aria-hidden />
+      <div className="space-y-3 px-6">
+        <div className="flex items-center gap-3">
+          <div className="h-9 flex-1 rounded-sm bg-white/85 px-3 py-1.5 text-right font-mono text-sm text-black/80">{cvvOf(card)}</div>
+          <p className="text-[10px] uppercase tracking-widest opacity-80">CVV</p>
+        </div>
+        <div className="space-y-2 text-sm">
+          <p className="flex justify-between gap-3"><span className="opacity-70">Name</span><span className="truncate font-semibold">{holder}</span></p>
+          <p className="flex justify-between gap-3"><span className="opacity-70">Number</span><span className="font-mono tracking-wider">{cardNumber(card)}</span></p>
+          <p className="flex justify-between gap-3"><span className="opacity-70">Expires</span><span className="font-mono">{expiryOf(card)}</span></p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between px-6 pb-5 text-xs opacity-80">
+        <span>{card.type}</span>
+        <span className="font-display text-base font-bold italic">{card.network}</span>
+      </div>
+    </div>
+  );
+}
+
+// Keeps each face the same size as the card, and out of the way of the other face.
+const faceStyle: CSSProperties = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
+
+export function CardsSection() {
+  const { cards, toggleCard } = useBank();
+  const [adding, setAdding] = useState(false);
+  const [pos, setPos] = useState(0);
+  const [flippedId, setFlippedId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const track = useRef<HTMLDivElement>(null);
+  const frame = useRef<number>(0);
+
+  const canAdd = cards.length < MAX_CARDS;
+  // The add tile comes after the last card, when there is room for another.
+  const slots = cards.length + (canAdd ? 1 : 0);
+  const active = Math.min(slots - 1, Math.round(pos));
+  const cardNow = active < cards.length ? cards[active] : undefined;
+  const holder = getProfileName().toUpperCase();
+
+  // Swiping to another card turns the previous card back, and changes the glow to the new card's colour.
+  useEffect(() => {
+    setFlippedId(null);
+  }, [active]);
+
+  useEffect(() => {
+    setGlowTone(cardNow?.tone ?? null);
+  }, [cardNow?.tone]);
+
+  useEffect(() => () => setGlowTone(null), []);
+
+  const step = () => {
+    const el = track.current?.children[0] as HTMLElement | undefined;
+    return el ? el.offsetWidth + GAP : 1;
+  };
+
+  const onScroll = () => {
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      const el = track.current;
+      if (!el) return;
+      setPos(Math.max(0, Math.min(slots - 1, el.scrollLeft / step())));
+    });
+  };
+
+  const goTo = (i: number) => track.current?.scrollTo({ left: i * step(), behavior: "smooth" });
+
+  const onAdded = (index: number) => {
+    // Once the new card is in the list, bring it into view.
+    window.setTimeout(() => goTo(index), 80);
+  };
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Cards" subtitle="Swipe between your cards. Swipe past the last one to add a new card." />
+
+      <div className="relative -mx-4 overflow-visible">
+        <div
+          ref={track}
+          onScroll={onScroll}
+          className="no-scrollbar flex snap-x snap-mandatory items-center gap-5 overflow-x-auto py-8"
+          style={{ paddingInline: "calc(50% - 11rem)" }}
+          aria-label="Cards"
+        >
+          {cards.map((c, i) => {
+            const isActive = i === active;
+            const flipped = isActive && flippedId === c.id;
+            return (
+              <div key={c.id} className="shrink-0 snap-center transition-[transform,opacity] duration-300 ease-out" style={{ width: SLOT, ...pose(i - pos) }}>
+                <div className="relative aspect-[1.586] w-full transition-transform duration-700 ease-in-out" style={{ transformStyle: "preserve-3d", transform: `rotateY(${flipped ? 180 : 0}deg)` }}>
+                  <MetalFront card={c} frozen={c.frozen} active={isActive} />
+                  <MetalBack card={c} frozen={c.frozen} active={isActive} holder={holder} />
+                </div>
+              </div>
+            );
+          })}
+          {canAdd && (
+            <div className="shrink-0 snap-center transition-[transform,opacity] duration-300 ease-out" style={{ width: SLOT, ...pose(cards.length - pos) }}>
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="glass flex aspect-[1.586] w-full flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-border text-sm font-semibold transition-colors hover:bg-secondary"
+                aria-label="Add a new card"
+              >
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-accent-gradient text-primary-foreground shadow-lg">
+                  <Plus className="h-7 w-7" aria-hidden />
+                </span>
+                Add a card
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Dots: one per card, plus the add tile. */}
+      <div className="flex justify-center gap-2" role="tablist" aria-label="Choose a card">
+        {Array.from({ length: slots }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            role="tab"
+            aria-selected={i === active}
+            aria-label={i < cards.length ? `Card ${i + 1}` : "Add a card"}
+            onClick={() => goTo(i)}
+            className={`h-2 rounded-full transition-all duration-300 ${i === active ? "w-6 bg-accent" : "w-2 bg-muted-foreground/40"}`}
+          />
+        ))}
+      </div>
+
+      {cardNow ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button type="button" className="btn btn-ghost" onClick={() => setFlippedId(flippedId === cardNow.id ? null : cardNow.id)} aria-pressed={flippedId === cardNow.id}>
+              {flippedId === cardNow.id ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+              {flippedId === cardNow.id ? "Hide details" : "Show details"}
+            </button>
+            <button onClick={() => toggleCard(cardNow.id)} className={`btn ${cardNow.frozen ? "btn-primary" : "btn-ghost"}`}>
+              <Snowflake className="h-4 w-4" aria-hidden />
+              {cardNow.frozen ? "Unfreeze" : "Freeze"}
+            </button>
+          </div>
+          <p className="text-center text-xs text-muted-foreground">
+            {cardNow.label} · {cardNow.network} · {cardNow.frozen ? "Payments are blocked" : "Active"}
+          </p>
+          <div className="pt-20 text-center">
+            <button type="button" className="btn btn-primary" onClick={() => setSettingsOpen(true)}>
+              <Settings2 className="h-4 w-4" aria-hidden /> Card settings
+            </button>
+          </div>
+        </div>
+      ) : canAdd ? (
+        <div className="glass space-y-3 p-5 text-center">
+          <p className="font-semibold">Add a new card</p>
+          <p className="text-sm text-muted-foreground">Choose a name, a network, a type and a metal finish. The card details are generated, not typed in.</p>
+          <button type="button" className="btn btn-primary w-full" onClick={() => setAdding(true)}>
+            <Plus className="h-4 w-4" aria-hidden /> Add a card
+          </button>
+        </div>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground">You have {MAX_CARDS} cards, the most this demo allows. Remove one to add another.</p>
+      )}
+
+      {adding && <AddCardSheet onClose={() => setAdding(false)} onAdded={onAdded} />}
+      {settingsOpen && cardNow && <CardSettingsSheet card={cardNow} onClose={() => setSettingsOpen(false)} />}
+    </div>
+  );
+}
