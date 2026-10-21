@@ -155,29 +155,39 @@ function Frame({
   children: ReactNode;
   footer: ReactNode;
 }) {
+  // Seven segments fill up as you go; the step count sits beside them.
+  const SEGMENTS = 7;
+  const filled = Math.round(progress * SEGMENTS);
   return (
-    <form onSubmit={onSubmit} className="glass mx-auto flex w-full max-w-sm flex-col gap-6 p-7" aria-live="polite">
-      <div
-        className="h-1 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        aria-label="Sign-up progress"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(progress * 100)}
-      >
-        <div className="h-full bg-accent-gradient transition-[width] duration-500" style={{ width: `${Math.round(progress * 100)}%` }} />
+    <form onSubmit={onSubmit} className="glass mx-auto flex w-full max-w-sm flex-col gap-6 rounded-[1.75rem] p-6 sm:p-7" aria-live="polite">
+      <div className="flex items-center gap-3">
+        {onBack ? (
+          <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground hover:bg-input" onClick={onBack} aria-label="Back">
+            <ChevronLeft className="h-4 w-4" aria-hidden />
+          </button>
+        ) : (
+          <span className="h-9 w-9 shrink-0" aria-hidden />
+        )}
+        <div
+          className="flex flex-1 gap-1"
+          role="progressbar"
+          aria-label="Sign-up progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress * 100)}
+        >
+          {Array.from({ length: SEGMENTS }, (_, k) => (
+            <span key={k} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${k < filled ? "bg-accent-gradient" : "bg-secondary"}`} />
+          ))}
+        </div>
+        <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">{Math.round(progress * 100)}%</span>
       </div>
-      {onBack && (
-        <button type="button" className="btn btn-ghost btn-sm self-start" onClick={onBack} aria-label="Back">
-          <ChevronLeft className="h-4 w-4" aria-hidden /> Back
-        </button>
-      )}
-      <div>
-        <h2 className="text-2xl font-semibold">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+      <div className="space-y-2">
+        <h2 className="font-display text-2xl font-semibold">{title}</h2>
+        {subtitle && <p className="text-sm leading-relaxed text-muted-foreground">{subtitle}</p>}
       </div>
       <div className="space-y-4">{children}</div>
-      <div className="space-y-2 pt-2">{footer}</div>
+      <div className="space-y-3 pt-1">{footer}</div>
     </form>
   );
 }
@@ -577,6 +587,8 @@ export function Register({ onDone, onCancel }: { onDone: (firstName: string) => 
   return (
     <div className={`relative w-full ${tint ? "plan-theme" : ""}`} style={themeStyle}>
       {tint && <PlanBackdrop />}
+      {/* The same soft glow as the sign-in screen, so the two feel like one flow. */}
+      {!tint && <div className="pointer-events-none absolute -top-8 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-accent-gradient opacity-25 blur-3xl" aria-hidden />}
       <div key={step} className="page-fade relative z-10 w-full">
         {screen}
       </div>
