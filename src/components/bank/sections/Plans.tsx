@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { mouseDragHandlers } from "@/lib/bank/dragScroll";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, Minus, X } from "lucide-react";
 import { formatMoney, PLAN_IDS, type PlanId } from "@/lib/bank/data";
@@ -93,6 +94,7 @@ function Cell({ value }: { value: boolean | string }) {
  */
 export function PlanCarousel({ index, onIndexChange, billing = "monthly" }: { index: number; onIndexChange: (i: number) => void; billing?: Billing }) {
   const track = useRef<HTMLDivElement>(null);
+  const [drag] = useState(() => mouseDragHandlers(() => track.current));
   const fromSwipe = useRef(false);
 
   useEffect(() => {
@@ -116,7 +118,7 @@ export function PlanCarousel({ index, onIndexChange, billing = "monthly" }: { in
 
   return (
     <>
-      <div ref={track} onScroll={onScroll} className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2" aria-label="Plans">
+      <div ref={track} onScroll={onScroll} {...drag} className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2" aria-label="Plans">
         {PLANS.map((p, i) => {
           const active = i === index;
           return (

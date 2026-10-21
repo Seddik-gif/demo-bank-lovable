@@ -79,7 +79,8 @@ export function Layout({ section, onNavigate, onSignOut, children }: Props) {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-section={section}>
+      <div className="section-orbs" aria-hidden />
       {/* Desktop sidebar */}
       <aside className="glass fixed inset-y-3 left-3 z-30 hidden w-60 flex-col gap-8 p-5 desk:flex">
         <Logo />
@@ -124,8 +125,8 @@ export function Layout({ section, onNavigate, onSignOut, children }: Props) {
 export function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-6">
-      <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+      <h1 className="section-title text-2xl font-semibold sm:text-3xl">{title}</h1>
+      {subtitle && <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>}
     </div>
   );
 }

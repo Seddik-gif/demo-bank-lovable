@@ -231,11 +231,12 @@ html {
 
 @layer components {
 .glass {
-  background: var(--card);
-  backdrop-filter: blur(10px) saturate(120%);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  /* A lit top edge over the panel colour, so every surface reads as one layer above the background. */
+  background: linear-gradient(165deg, oklch(1 0 0 / 0.09), transparent 42%), var(--card);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
   border: 1px solid var(--border);
-  border-radius: 1.25rem;
+  border-radius: 1.375rem;
   box-shadow: var(--shadow-glass);
 }
 .text-gradient { background: var(--gradient-accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -247,8 +248,10 @@ html {
   transition: transform 0.15s ease, filter 0.2s ease, background-color 0.2s ease; cursor: pointer;
 }
 .btn:active { transform: scale(0.97); }
-.btn-primary { background-image: var(--gradient-accent); color: var(--primary-foreground); box-shadow: 0 8px 24px -10px var(--violet); }
-.btn-primary:hover { filter: brightness(1.1); }
+.btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background-image: var(--gradient-accent); color: var(--primary-foreground); box-shadow: 0 10px 28px -12px var(--violet), inset 0 1px 0 oklch(1 0 0 / 0.25); }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 14px 34px -12px var(--violet), inset 0 1px 0 oklch(1 0 0 / 0.3); }
 .btn-ghost { background: var(--secondary); border: 1px solid var(--border); color: var(--foreground); }
 .btn-ghost:hover { background: var(--input); }
 .btn-danger { background: var(--destructive); color: var(--primary-foreground); }
@@ -258,7 +261,7 @@ html {
   width: 100%; min-width: 0; border-radius: 0.75rem; padding: 0.6rem 0.8rem;
   background: var(--secondary); border: 1px solid var(--input); color: var(--foreground); font-size: 0.95rem;
 }
-.field:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.field:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px oklch(0.75 0.14 210 / 0.25); }
 select.field option { background: var(--popover); color: var(--foreground); }
 
 .page-fade { animation: fade-up 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -536,3 +539,65 @@ select.field option { background: var(--popover); color: var(--foreground); }
 :root[data-motion="reduce"] .tilt {
   transform: none !important;
 }
+
+/* Each section has its own colour atmosphere. The two colours are registered so they fade between sections. */
+@property --sec-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: oklch(0.5 0.24 295);
+}
+@property --sec-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: oklch(0.6 0.15 210);
+}
+[data-section] {
+  --sec-a: oklch(0.5 0.24 295);
+  --sec-b: oklch(0.6 0.15 210);
+  transition: --sec-a 900ms ease, --sec-b 900ms ease;
+}
+[data-section="cards"] { --sec-a: oklch(0.5 0.2 300); --sec-b: oklch(0.62 0.16 340); }
+[data-section="budgets"] { --sec-a: oklch(0.55 0.16 160); --sec-b: oklch(0.6 0.14 185); }
+[data-section="activity"] { --sec-a: oklch(0.62 0.17 60); --sec-b: oklch(0.55 0.18 35); }
+[data-section="crypto"] { --sec-a: oklch(0.64 0.16 75); --sec-b: oklch(0.52 0.12 55); }
+[data-section="invest"] { --sec-a: oklch(0.55 0.2 260); --sec-b: oklch(0.66 0.14 220); }
+[data-section="payments"] { --sec-a: oklch(0.56 0.22 330); --sec-b: oklch(0.6 0.16 300); }
+[data-section="monitor"] { --sec-a: oklch(0.56 0.12 200); --sec-b: oklch(0.46 0.1 240); }
+
+.section-orbs {
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    radial-gradient(40% 35% at 18% 18%, var(--sec-a), transparent 70%),
+    radial-gradient(38% 32% at 86% 72%, var(--sec-b), transparent 70%);
+  filter: blur(40px);
+  transition: opacity 0.4s ease;
+}
+:root[data-motion="reduce"] .section-orbs { filter: none; }
+
+/* Bottom bar: the active tab gets a glowing pill in its section's colour. */
+.bottom-nav .tab-icon { transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease; }
+.bottom-nav button[aria-current="page"] .tab-icon {
+  box-shadow: 0 8px 22px -8px var(--sec-a), inset 0 1px 0 oklch(1 0 0 / 0.3);
+  transform: translateY(-2px);
+}
+
+/* Section titles: a short accent bar under the title. */
+.section-title::after {
+  content: "";
+  display: block;
+  margin-top: 0.45rem;
+  height: 3px;
+  width: 2.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sec-a), var(--sec-b));
+  transition: background 0.9s ease;
+}
+
+/* Lists inside panels: a soft highlight when you hover a row you can open. */
+.row-hover { transition: background-color 0.2s ease, transform 0.2s ease; border-radius: 0.875rem; }
+.row-hover:hover { background-color: oklch(1 0 0 / 0.05); }
+.row-hover:active { transform: scale(0.99); }
