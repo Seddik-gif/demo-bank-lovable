@@ -564,19 +564,38 @@ select.field option { background: var(--popover); color: var(--foreground); }
 [data-section="payments"] { --sec-a: oklch(0.56 0.22 330); --sec-b: oklch(0.6 0.16 300); }
 [data-section="monitor"] { --sec-a: oklch(0.56 0.12 200); --sec-b: oklch(0.46 0.1 240); }
 
+/* The screen wash: a full-screen colour behind every page. Each section sets it, and an account page sets its own
+   colour while you swipe between accounts. The colours are registered so they fade rather than jump. */
+@property --wash-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #5b21b6;
+}
+@property --wash-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1e1b4b;
+}
+[data-section] {
+  --wash-a: #5b21b6;
+  --wash-b: #1e1b4b;
+  transition: --wash-a 0.8s ease, --wash-b 0.8s ease;
+}
+[data-section="cards"] { --wash-a: #7e22ce; --wash-b: #3b0764; }
+[data-section="budgets"] { --wash-a: #047857; --wash-b: #052e2b; }
+[data-section="activity"] { --wash-a: #b45309; --wash-b: #3b0d0d; }
+[data-section="crypto"] { --wash-a: #a16207; --wash-b: #1c1917; }
+[data-section="invest"] { --wash-a: #1d4ed8; --wash-b: #0b1537; }
+[data-section="payments"] { --wash-a: #be185d; --wash-b: #3b0764; }
+[data-section="monitor"] { --wash-a: #0f766e; --wash-b: #042f2e; }
+
 .section-orbs {
   position: fixed;
-  inset: -10%;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.42;
-  background:
-    radial-gradient(40% 35% at 18% 18%, var(--sec-a), transparent 70%),
-    radial-gradient(38% 32% at 86% 72%, var(--sec-b), transparent 70%);
-  filter: blur(40px);
-  transition: opacity 0.4s ease;
+  background: linear-gradient(165deg, var(--wash-a) 0%, var(--wash-b) 85%);
 }
-:root[data-motion="reduce"] .section-orbs { filter: none; }
 
 /* Bottom bar: the active tab gets a glowing pill in its section's colour. */
 .bottom-nav .tab-icon { transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease; }

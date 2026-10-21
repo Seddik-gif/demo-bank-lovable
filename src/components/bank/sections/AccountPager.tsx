@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, ArrowUpDown, BookOpen, Snowflake } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
 import { AccountGuide } from "./AccountGuide";
@@ -44,6 +44,26 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
   // The main current account always comes first; the rest keep their opening order.
   const ordered = [...accounts].sort((a, b) => Number(a.id !== "main") - Number(b.id !== "main"));
   const active = Math.min(ordered.length - 1, Math.round(pos));
+  const activeKind = ordered[active]?.kind ?? "current";
+
+  // The whole screen takes the colour of the account you are on, and fades to the next one as you swipe.
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>("[data-section]");
+    const theme = ACCOUNT_THEME[activeKind];
+    if (!root) return;
+    root.style.setProperty("--wash-a", theme.from);
+    root.style.setProperty("--wash-b", theme.to);
+  }, [activeKind]);
+
+  // Back on another section, the screen returns to that section's colour.
+  useEffect(
+    () => () => {
+      const root = document.querySelector<HTMLElement>("[data-section]");
+      root?.style.removeProperty("--wash-a");
+      root?.style.removeProperty("--wash-b");
+    },
+    [],
+  );
 
   // While swiping, the page you are leaving shrinks and fades and the one you are reaching comes forward.
   // Written straight to the DOM on each frame, so the motion follows your finger without re-rendering.
@@ -106,8 +126,8 @@ function AccountPage({ account: a, balance, transactions, onNavigate }: { accoun
 
   // Account on top, a compact Latest activity card below. The card grows row by row, up to three.
   return (
-    <div className="reveal relative overflow-hidden rounded-[28px] p-3" style={{ background: `linear-gradient(160deg, ${theme.from} 0%, ${theme.to} 78%)` }}>
-      <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full opacity-40 blur-3xl" style={{ background: theme.glow }} aria-hidden />
+    <div className="reveal relative">
+      <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full opacity-30 blur-3xl" style={{ background: theme.glow }} aria-hidden />
       <article className="relative flex flex-col gap-3 md:grid md:grid-cols-2 md:items-start" aria-label={a.name}>
       <section className="glass min-w-0 space-y-4 p-5" aria-label="Account details">
         <header className="space-y-1">
