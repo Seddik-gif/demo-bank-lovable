@@ -5,6 +5,7 @@ import { track } from "@/lib/bank/monitor";
 import { useBank } from "@/lib/bank/store";
 import { setProfileName } from "@/lib/bank/profile";
 import { updateSettings } from "@/lib/bank/settings";
+import { passcodeProblem } from "@/lib/bank/passcode";
 import { PLAN_NAMES } from "./sections/Plans";
 
 // Testing build: no real SMS, email, camera or ID checks. These codes are fixed on purpose.
@@ -90,17 +91,6 @@ const EMPTY: Draft = {
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const isPhone = (v: string) => /^\d{7,12}$/.test(v);
 
-/** Returns why a passcode is rejected, or null when it is fine. */
-export function passcodeProblem(p: string): string | null {
-  if (!/^\d{6}$/.test(p)) return "Enter all 6 digits.";
-  if (/^(\d)\1{5}$/.test(p)) return "Too simple: avoid one repeated digit.";
-  const d = p.split("").map(Number);
-  const step = (d[1] ?? 0) - (d[0] ?? 0);
-  if ((step === 1 || step === -1) && d.every((x, i) => i === 0 || x - (d[i - 1] ?? 0) === step)) {
-    return "Too simple: avoid sequences like 123456.";
-  }
-  return null;
-}
 
 function ageOn(dob: string): number {
   const d = new Date(dob);
