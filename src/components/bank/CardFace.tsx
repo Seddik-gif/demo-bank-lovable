@@ -29,11 +29,10 @@ export function CardFace({ card, className = "" }: { card: Card; holder?: string
   };
   return (
     <div
-      className={`relative aspect-[1.586] w-full rounded-[1.1rem] ${className}`}
+      className={`relative isolate z-0 aspect-[1.586] w-full rounded-[1.1rem] ${className}`}
       style={{
         transform: `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
         transition: "transform 0.25s ease-out",
-        transformStyle: "preserve-3d",
       }}
       onPointerMove={onMove}
       onPointerLeave={() => setTilt({ x: 0, y: 0 })}

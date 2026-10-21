@@ -202,7 +202,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
                 focusCard(c.id);
                 onNavigate("cards");
               }}
-              className="w-64 shrink-0 rounded-[1.1rem] text-left transition-transform duration-300 hover:-translate-y-1 active:scale-[0.98]"
+              className="relative isolate z-0 w-64 shrink-0 rounded-[1.1rem] text-left"
               aria-label={`${c.label} ending ${c.last4}, ${c.frozen ? "frozen" : "active"}. Open this card.`}
             >
               <CardFace card={c} holder={getProfileName().toUpperCase()} />
