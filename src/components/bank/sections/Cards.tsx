@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Eye, EyeOff, Plus, Settings2, Snowflake } from "lucide-react";
 import { setGlowTone } from "@/lib/bank/cardGlow";
 import { mouseDragHandlers } from "@/lib/bank/dragScroll";
+import { takeFocusedCard } from "@/lib/bank/cardFocus";
 import { CardSettingsSheet } from "./CardSettingsSheet";
 import type { Card } from "@/lib/bank/data";
 import { MAX_CARDS } from "@/lib/bank/money";
@@ -120,6 +121,15 @@ export function CardsSection() {
   };
 
   const goTo = (i: number) => track.current?.scrollTo({ left: i * step(), behavior: "smooth" });
+
+  // Opened from a card on Home: show that card first.
+  useEffect(() => {
+    const id = takeFocusedCard();
+    const i = id ? cards.findIndex((c) => c.id === id) : -1;
+    if (i >= 0) window.setTimeout(() => goTo(i), 0);
+    // Only on the first render of this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onAdded = (index: number) => {
     // Once the new card is in the list, bring it into view.

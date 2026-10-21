@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
+import { focusCard } from "@/lib/bank/cardFocus";
 import { AddCardSheet } from "./AddCardSheet";
 import { PlansSheet } from "./Plans";
 import { initials, round2, spentInCategory, type SectionId, type Transaction } from "@/lib/bank/data";
@@ -195,9 +196,13 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
             <button
               key={c.id}
               type="button"
-              onClick={() => toggleCard(c.id)}
+              onClick={() => {
+                // Open the Cards page on this card.
+                focusCard(c.id);
+                onNavigate("cards");
+              }}
               className={`bank-card tone-${c.tone} ${c.frozen ? "frozen" : ""} aspect-[1.586] w-64 shrink-0 rounded-2xl p-4 text-left`}
-              aria-label={`${c.label} ending ${c.last4}, ${c.frozen ? "frozen" : "active"}. Tap to ${c.frozen ? "unfreeze" : "freeze"}.`}
+              aria-label={`${c.label} ending ${c.last4}, ${c.frozen ? "frozen" : "active"}. Open this card.`}
             >
               <div className="relative z-10 flex h-full flex-col justify-between">
                 <p className="font-display text-sm font-semibold">{c.label}</p>
