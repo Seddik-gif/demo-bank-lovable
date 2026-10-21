@@ -9,6 +9,7 @@ import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { TransactionList } from "../TransactionList";
 import { CryptoWalletSheet } from "./CryptoWalletSheet";
+import { mouseDragHandlers } from "@/lib/bank/dragScroll";
 
 const KIND_LABEL: Record<AccountKind, string> = {
   current: "Current account",
@@ -38,6 +39,8 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
   const [pos, setPos] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
+  // Mouse drag swiping. Created once so the drag state survives between pointer events.
+  const [drag] = useState(() => mouseDragHandlers(() => track.current));
   // The main current account always comes first; the rest keep their opening order.
   const ordered = [...accounts].sort((a, b) => Number(a.id !== "main") - Number(b.id !== "main"));
   const active = Math.min(ordered.length - 1, Math.round(pos));
@@ -64,7 +67,7 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
 
   return (
     <section aria-label="Your accounts" className="space-y-3">
-      <div ref={track} onScroll={onScroll} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain" aria-label="Accounts">
+      <div ref={track} onScroll={onScroll} {...drag} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain" aria-label="Accounts">
         {ordered.map((a) => (
           <div key={a.id} className="w-full shrink-0 snap-center px-4 transition-[transform,opacity] duration-200 ease-out will-change-transform">
             <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} />

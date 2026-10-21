@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Eye, EyeOff, Plus, Settings2, Snowflake } from "lucide-react";
 import { setGlowTone } from "@/lib/bank/cardGlow";
+import { mouseDragHandlers } from "@/lib/bank/dragScroll";
 import { CardSettingsSheet } from "./CardSettingsSheet";
 import type { Card } from "@/lib/bank/data";
 import { MAX_CARDS } from "@/lib/bank/money";
@@ -84,6 +85,7 @@ export function CardsSection() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const track = useRef<HTMLDivElement>(null);
   const frame = useRef<number>(0);
+  const [drag] = useState(() => mouseDragHandlers(() => track.current));
 
   const canAdd = cards.length < MAX_CARDS;
   // The add tile comes after the last card, when there is room for another.
@@ -132,6 +134,7 @@ export function CardsSection() {
         <div
           ref={track}
           onScroll={onScroll}
+          {...drag}
           className="no-scrollbar flex snap-x snap-mandatory items-center gap-5 overflow-x-auto py-8"
           style={{ paddingInline: "calc(50% - 11rem)" }}
           aria-label="Cards"
