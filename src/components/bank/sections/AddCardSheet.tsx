@@ -4,6 +4,7 @@ import { ChevronLeft, CreditCard, Smartphone, Truck, X } from "lucide-react";
 import { CARD_TONES, type Card, type CardTone } from "@/lib/bank/data";
 import { CARD_TYPES, type NewCardConfig } from "@/lib/bank/money";
 import { useBank } from "@/lib/bank/store";
+import { SheetBackdrop, SheetPanel } from "../motion";
 
 const FINISH_LABEL: Record<CardTone, string> = { violet: "Violet", cyan: "Ice", gold: "Gold", emerald: "Emerald" };
 const FINISH_SWATCH: Record<CardTone, string> = {
@@ -61,8 +62,9 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Order a card">
-      <button className="fade-in absolute inset-0 bg-background/70" aria-label={mandatory ? "Card wizard" : "Close"} onClick={mandatory ? undefined : onClose} />
-      <div className="glass page-fade relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
+      {/* A mandatory wizard has no backdrop click, so the customer has to finish the order. */}
+      <SheetBackdrop onClick={mandatory ? undefined : onClose} label={mandatory ? "Card wizard" : "Close"} />
+      <SheetPanel className="glass flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
         <div className="space-y-3 border-b border-border p-4">
           <div className="flex items-center justify-between gap-3">
             {step > 0 ? (
@@ -184,7 +186,7 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
             </button>
           )}
         </div>
-      </div>
+      </SheetPanel>
     </div>,
     document.body,
   );

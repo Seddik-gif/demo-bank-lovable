@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 export const SHEET_SPRING = { type: "spring", stiffness: 300, damping: 32, mass: 0.9 } as const;
 
 /** The dark layer behind a sheet. It fades in and out, and a tap on it closes the sheet. */
-export function SheetBackdrop({ onClick, label, blur = "backdrop-blur-md" }: { onClick: () => void; label: string; blur?: string }) {
+export function SheetBackdrop({ onClick, label, blur = "backdrop-blur-md" }: { onClick?: (() => void) | undefined; label: string; blur?: string }) {
   const reduce = useReducedMotion();
   return (
     <motion.button

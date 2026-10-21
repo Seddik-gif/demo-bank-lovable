@@ -15,6 +15,7 @@ import { resetSettings, updateSettings, useSettings, type Settings } from "@/lib
 import { getProfileName, handleFor } from "@/lib/bank/profile";
 import { REPLAY_TOUR_EVENT } from "../Welcome";
 import { PLAN_NAMES, PlansSheet } from "./Plans";
+import { SheetPanel } from "../motion";
 
 const PROFILE = {
   name: "Demo User",
@@ -555,7 +556,7 @@ export function ProfileSheet({
   // Full screen. Its own colour, because it sits outside the section wash.
   return createPortal(
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Profile" style={{ background: "linear-gradient(165deg, #4c1d95 0%, #1e1b4b 55%, #0b0a1f 100%)" }}>
-      <div className="page-fade relative flex h-full w-full flex-col overflow-hidden">
+      <SheetPanel className="relative flex h-full w-full flex-col overflow-hidden">
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
           <h2 className="font-display text-xl font-semibold">Profile</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>
@@ -631,7 +632,7 @@ export function ProfileSheet({
             <div className="overflow-y-auto overscroll-contain p-4 pb-8">{detail(open)}</div>
           </div>
         )}
-      </div>
+      </SheetPanel>
       {plansOpen && <PlansSheet current={plan} onClose={() => setPlansOpen(false)} onChoose={setPlan} />}
       {opening && <OpenAccountSheet onClose={() => setOpening(false)} />}
     </div>,

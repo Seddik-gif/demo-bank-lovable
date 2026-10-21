@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ArrowUpDown, BookOpen, Snowflake } from "lucide-react";
+import { motion } from "framer-motion";
 import { MoveSheet } from "./MoveSheet";
 import { AccountGuide } from "./AccountGuide";
 import { CRYPTO_HOLDINGS, INVEST_HOLDINGS, formatMoney, type Account, type AccountKind, type SectionId, type Transaction } from "@/lib/bank/data";
@@ -97,7 +98,10 @@ export function AccountPager({ onNavigate, actions }: { onNavigate: (id: Section
       {ordered.length > 1 && (
         <div className="flex justify-center gap-2" role="tablist" aria-label="Choose an account">
           {ordered.map((a, i) => (
-            <button key={a.id} type="button" role="tab" aria-selected={i === active} aria-label={a.name} onClick={() => goTo(i)} className={`h-2 rounded-full transition-all duration-300 ${i === active ? "w-6 bg-accent" : "w-2 bg-muted-foreground/40"}`} />
+            <button key={a.id} type="button" role="tab" aria-selected={i === active} aria-label={a.name} onClick={() => goTo(i)} className="relative h-2 w-2 rounded-full bg-muted-foreground/40">
+              {/* One pill slides between the dots on a spring, instead of each dot resizing on its own. */}
+              {i === active && <motion.span layoutId="account-pill" className="absolute left-0 top-0 h-2 w-6 rounded-full bg-accent" transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
+            </button>
           ))}
         </div>
       )}
