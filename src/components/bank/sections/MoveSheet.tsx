@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { mouseDragHandlers } from "@/lib/bank/dragScroll";
 import { createPortal } from "react-dom";
 import { ArrowDown, ArrowUp, ArrowUpDown, X } from "lucide-react";
 import { formatMoney, round2, type Account } from "@/lib/bank/data";
@@ -105,12 +106,15 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
 /** A horizontal row of account cards to pick one account from. The disabled account is the other side of the move. */
 function AccountChooser({ label, accounts, selected, disabledId, onPick }: { label: string; accounts: Account[]; selected: string; disabledId: string; onPick: (id: string) => void }) {
   const Icon = label === "From" ? ArrowUp : ArrowDown;
+  const track = useRef<HTMLDivElement>(null);
+  // Mouse drag swiping along the account cards. Created once so the drag state survives between events.
+  const [drag] = useState(() => mouseDragHandlers(() => track.current));
   return (
-    <fieldset className="space-y-2">
+    <fieldset className="min-w-0 space-y-2">
       <legend className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
         <Icon className="h-4 w-4" aria-hidden /> {label}
       </legend>
-      <div className="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1" role="radiogroup" aria-label={`${label} account`}>
+      <div ref={track} {...drag} className="no-scrollbar -mx-1 flex w-full min-w-0 snap-x gap-2 overflow-x-auto px-1 pb-1" role="radiogroup" aria-label={`${label} account`}>
         {accounts.map((a) => {
           const isSel = a.id === selected;
           const isOther = a.id === disabledId;
