@@ -317,7 +317,8 @@ function Bubble({ m, contact, onPay, onRespond }: { m: ChatMessage; contact: Con
   const mine = m.from === "me";
   return (
     <li className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${mine ? "bg-accent-gradient text-primary-foreground" : "glass"}`}>
+      {/* Your messages are on the accent colour, theirs on a plain surface; each has its tail corner toward its sender. */}
+      <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${mine ? "rounded-br-md bg-accent-gradient text-primary-foreground" : "rounded-bl-md bg-secondary"}`}>
         {m.request ? (
           <RequestCard m={m} contact={contact} onPay={onPay} onRespond={onRespond} />
         ) : m.payment ? (
@@ -429,13 +430,13 @@ function ChatPane({ contact, onBack }: { contact: Contact; onBack: () => void })
         </div>
       )}
 
-      <form onSubmit={submit} className="flex items-end gap-2 border-t border-border p-3">
+      <form onSubmit={submit} className="flex items-center gap-2 border-t border-border p-3">
         <label className="min-w-0 flex-1">
           <span className="sr-only">Message {contact.name}</span>
-          <input className="field" value={text} maxLength={MAX_MESSAGE_LENGTH} onChange={(e) => setText(e.target.value)} placeholder={`Message ${contact.name}`} />
+          <input className="field rounded-full px-4" value={text} maxLength={MAX_MESSAGE_LENGTH} onChange={(e) => setText(e.target.value)} placeholder={`Message ${contact.name}`} />
         </label>
-        <button type="submit" className="btn btn-primary btn-sm shrink-0" disabled={!text.trim()}>
-          <Send className="h-4 w-4" aria-hidden /> Send
+        <button type="submit" className="btn btn-primary shrink-0 rounded-full px-4" disabled={!text.trim()}>
+          <Send className="h-4 w-4" aria-hidden /> <span className="sr-only sm:not-sr-only">Send</span>
         </button>
       </form>
       {error && <p role="alert" className="px-4 pb-3 text-xs font-medium text-destructive">{error}</p>}
@@ -459,7 +460,8 @@ export function PaymentsSection() {
           {selected ? (
             <ChatPane key={selected.id} contact={selected} onBack={() => setSelectedId(null)} />
           ) : (
-            <div className="glass flex min-h-[32rem] flex-col items-center justify-center gap-2 p-8 text-center">
+            <div className="glass flex min-h-[32rem] flex-col items-center justify-center gap-3 p-8 text-center">
+              <ChatIllustration className="h-24 w-24" />
               <p className="font-semibold">Choose a contact</p>
               <p className="text-sm text-muted-foreground">Open a chat to message someone, send money, or request it.</p>
             </div>

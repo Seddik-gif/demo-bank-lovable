@@ -55,7 +55,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 
 ## Screen redesigns (branch `feat/screens`)
 
-- [ ] 12. Payments.
+- [x] 12. Payments.
+  - Done: chat bubbles (your messages on the accent colour, theirs on a plain surface, each with its tail toward its sender), a rounded message box with a rounded send button, and the chat illustration on the "Choose a contact" screen. Checked: a message sends and shows in the new style, with no errors.
+  - Not changed: the contact list layout and the Pay and Request panels. Those are next if you want more.
 - [ ] 13. Budgets.
 - [ ] 14. Activity.
 - [ ] 15. Crypto and Invest.
