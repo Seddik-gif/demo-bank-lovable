@@ -5,10 +5,10 @@ import type { Card, CardTone } from "@/lib/bank/data";
  * so the card looks like tinted glass. Each finish also has the colour its text should be.
  */
 const FINISH: Record<CardTone, { background: string; ink: string }> = {
-  violet: { background: "linear-gradient(135deg, rgba(224,33,138,0.26) 0%, rgba(157,43,214,0.24) 55%, rgba(74,20,216,0.26) 100%)", ink: "#ffffff" },
-  gold: { background: "linear-gradient(135deg, rgba(255,143,177,0.24) 0%, rgba(255,196,163,0.23) 45%, rgba(253,246,178,0.24) 100%)", ink: "#1e1b4b" },
-  cyan: { background: "linear-gradient(135deg, rgba(157,195,255,0.24) 0%, rgba(191,230,247,0.23) 50%, rgba(185,246,216,0.24) 100%)", ink: "#1e1b4b" },
-  emerald: { background: "linear-gradient(135deg, rgba(185,246,216,0.24) 0%, rgba(216,247,166,0.23) 55%, rgba(253,246,178,0.24) 100%)", ink: "#1e1b4b" },
+  violet: { background: "linear-gradient(135deg, rgba(224,33,138,0.44) 0%, rgba(157,43,214,0.42) 55%, rgba(74,20,216,0.46) 100%)", ink: "#ffffff" },
+  gold: { background: "linear-gradient(135deg, rgba(255,143,177,0.42) 0%, rgba(255,196,163,0.4) 45%, rgba(253,246,178,0.42) 100%)", ink: "#1e1b4b" },
+  cyan: { background: "linear-gradient(135deg, rgba(157,195,255,0.42) 0%, rgba(191,230,247,0.4) 50%, rgba(185,246,216,0.42) 100%)", ink: "#1e1b4b" },
+  emerald: { background: "linear-gradient(135deg, rgba(185,246,216,0.42) 0%, rgba(216,247,166,0.4) 55%, rgba(253,246,178,0.42) 100%)", ink: "#1e1b4b" },
 };
 
 /**
@@ -24,9 +24,11 @@ export function CardFace({ card, className = "" }: { card: Card; holder?: string
       style={{ transformStyle: "preserve-3d" }}
     >
       <div
-        className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[1.1rem] border border-white/50 p-5 backdrop-blur-md"
+        className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[1.1rem] border border-white/60 p-5"
         style={{
           background,
+          backdropFilter: "blur(14px) saturate(190%)",
+          WebkitBackdropFilter: "blur(14px) saturate(190%)",
           color: ink,
           boxShadow:
             "0 34px 44px -22px rgba(20,10,60,0.6), 0 10px 18px -10px rgba(20,10,60,0.35), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(255,255,255,0.2)",
