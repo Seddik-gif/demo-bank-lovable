@@ -444,15 +444,12 @@ export function applyTransfer(state: BankState, fromId: string, toId: string, am
   const accounts = state.accounts.map((a) =>
     a.id === fromId ? { ...a, balance: round2(a.balance - value) } : a.id === toId ? { ...a, balance: round2(a.balance + value) } : a,
   );
-  const txn: Transaction = {
-    id: uid(),
-    date: now.toISOString(),
-    description: `Transfer to ${to.name}`,
-    category: "Transfer",
-    amount: -value,
-    accountId: fromId,
-  };
-  return { ...state, accounts, transactions: [txn, ...state.transactions] };
+  const from = state.accounts.find((a) => a.id === fromId)!;
+  // The movement shows in both accounts' Latest activity: money out of one, money into the other.
+  const iso = now.toISOString();
+  const out: Transaction = { id: uid(), date: iso, description: `Transfer to ${to.name}`, category: "Transfer", amount: -value, accountId: fromId };
+  const into: Transaction = { id: uid(), date: iso, description: `Transfer from ${from.name}`, category: "Transfer", amount: value, accountId: toId };
+  return { ...state, accounts, transactions: [out, into, ...state.transactions] };
 }
 
 export function validateLimit(limit: number): Result {
