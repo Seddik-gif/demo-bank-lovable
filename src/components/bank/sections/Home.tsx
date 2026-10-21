@@ -144,18 +144,20 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
         </button>
       </div>
 
-      {/* Primary actions, right under the top bar */}
-      <div className="grid grid-cols-5 gap-2" role="group" aria-label="Quick actions">
-        <QuickAction icon={PlusCircle} label="Add funds" onClick={() => setSheet("addfunds")} />
-        <QuickAction icon={Send} label="Send" onClick={() => setMoveOpen(true)} />
-        <QuickAction icon={Receipt} label="Request" onClick={() => onNavigate("payments")} />
-        <QuickAction icon={CreditCard} label="Cards" onClick={() => onNavigate("cards")} />
-        <QuickAction icon={MoreHorizontal} label="More" onClick={() => setSheet("more")} />
-      </div>
-
-      {/* One page per account; swipe sideways to move between them */}
+      {/* One page per account; swipe sideways to move between them. The quick actions sit under each account card. */}
       <div data-tour="balance">
-        <AccountPager onNavigate={onNavigate} />
+        <AccountPager
+          onNavigate={onNavigate}
+          actions={
+            <div className="grid grid-cols-5 gap-2" role="group" aria-label="Quick actions">
+              <QuickAction icon={PlusCircle} label="Add funds" onClick={() => setSheet("addfunds")} />
+              <QuickAction icon={Send} label="Send" onClick={() => setMoveOpen(true)} />
+              <QuickAction icon={Receipt} label="Request" onClick={() => onNavigate("payments")} />
+              <QuickAction icon={CreditCard} label="Cards" onClick={() => onNavigate("cards")} />
+              <QuickAction icon={MoreHorizontal} label="More" onClick={() => setSheet("more")} />
+            </div>
+          }
+        />
       </div>
 
       <UpcomingBills onNavigate={onNavigate} />

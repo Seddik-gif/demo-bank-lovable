@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ArrowUpDown, BookOpen, Snowflake } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
 import { AccountGuide } from "./AccountGuide";
@@ -34,7 +34,7 @@ function activityOf(a: Account, transactions: Transaction[]): Transaction[] {
 }
 
 /** The account pages on Home. Swipe sideways to move from one account to the next. */
-export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => void }) {
+export function AccountPager({ onNavigate, actions }: { onNavigate: (id: SectionId) => void; actions?: ReactNode }) {
   const { accounts, transactions, crypto, investments } = useBank();
   const [pos, setPos] = useState(0);
   const track = useRef<HTMLDivElement>(null);
@@ -90,7 +90,7 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
       <div ref={track} onScroll={onScroll} {...drag} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain" aria-label="Accounts">
         {ordered.map((a) => (
           <div key={a.id} className="w-full shrink-0 snap-center px-4 transition-[transform,opacity] duration-200 ease-out will-change-transform">
-            <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} />
+            <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} actions={actions} />
           </div>
         ))}
       </div>
@@ -116,7 +116,7 @@ const ACCOUNT_THEME: Record<AccountKind, { from: string; to: string; glow: strin
   pockets: { from: "#be185d", to: "#3b0764", glow: "#f9a8d4" },
 };
 
-function AccountPage({ account: a, balance, transactions, onNavigate }: { account: Account; balance: number; transactions: Transaction[]; onNavigate: (id: SectionId) => void }) {
+function AccountPage({ account: a, balance, transactions, onNavigate, actions }: { account: Account; balance: number; transactions: Transaction[]; onNavigate: (id: SectionId) => void; actions?: ReactNode }) {
   const kind = a.kind ?? "current";
   const theme = ACCOUNT_THEME[kind];
   const [moving, setMoving] = useState(false);
@@ -129,6 +129,7 @@ function AccountPage({ account: a, balance, transactions, onNavigate }: { accoun
     <div className="reveal relative">
       <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full opacity-30 blur-3xl" style={{ background: theme.glow }} aria-hidden />
       <article className="relative flex flex-col gap-3 md:grid md:grid-cols-2 md:items-start" aria-label={a.name}>
+      <div className="flex min-w-0 flex-col gap-3">
       <section className="glass min-w-0 space-y-4 p-5" aria-label="Account details">
         <header className="space-y-1">
           <p className="text-xs text-white/70">{KIND_LABEL[kind]}</p>
@@ -148,6 +149,9 @@ function AccountPage({ account: a, balance, transactions, onNavigate }: { accoun
         </div>
         <Details account={a} />
       </section>
+      {/* Quick actions sit right under the account card. */}
+      {actions}
+      </div>
 
       <section className="glass min-w-0 p-4" aria-label="Latest activity">
         <p className="mb-1 text-sm font-semibold">Latest activity</p>
