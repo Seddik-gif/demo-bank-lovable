@@ -144,18 +144,18 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
         </button>
       </div>
 
-      {/* One page per account; swipe sideways to move between them */}
-      <div data-tour="balance">
-        <AccountPager onNavigate={onNavigate} />
-      </div>
-
-      {/* Primary actions */}
+      {/* Primary actions, right under the top bar */}
       <div className="grid grid-cols-5 gap-2" role="group" aria-label="Quick actions">
         <QuickAction icon={PlusCircle} label="Add funds" onClick={() => setSheet("addfunds")} />
         <QuickAction icon={Send} label="Send" onClick={() => setMoveOpen(true)} />
         <QuickAction icon={Receipt} label="Request" onClick={() => onNavigate("payments")} />
         <QuickAction icon={CreditCard} label="Cards" onClick={() => onNavigate("cards")} />
         <QuickAction icon={MoreHorizontal} label="More" onClick={() => setSheet("more")} />
+      </div>
+
+      {/* One page per account; swipe sideways to move between them */}
+      <div data-tour="balance">
+        <AccountPager onNavigate={onNavigate} />
       </div>
 
       <UpcomingBills onNavigate={onNavigate} />
