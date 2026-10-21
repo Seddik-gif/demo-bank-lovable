@@ -1,3 +1,4 @@
+import { useState, type PointerEvent } from "react";
 import type { Card, CardTone } from "@/lib/bank/data";
 
 /**
@@ -18,10 +19,24 @@ const FINISH: Record<CardTone, { background: string; ink: string }> = {
 export function CardFace({ card, className = "" }: { card: Card; holder?: string; className?: string }) {
   const { background, ink } = FINISH[card.tone];
   const digits = `•••• •••• •••• ${card.last4}`;
+  // The card leans toward the pointer and settles flat when the pointer leaves. Limited to 8 degrees.
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    setTilt({ x: -py * 16, y: px * 16 });
+  };
   return (
     <div
-      className={`relative aspect-[1.586] w-full rounded-[1.1rem] transition-transform duration-500 ease-out [transform:perspective(900px)_rotateX(8deg)_rotateY(-10deg)] hover:[transform:perspective(900px)_rotateX(0deg)_rotateY(0deg)] ${className}`}
-      style={{ transformStyle: "preserve-3d" }}
+      className={`relative aspect-[1.586] w-full rounded-[1.1rem] ${className}`}
+      style={{
+        transform: `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+        transition: "transform 0.25s ease-out",
+        transformStyle: "preserve-3d",
+      }}
+      onPointerMove={onMove}
+      onPointerLeave={() => setTilt({ x: 0, y: 0 })}
     >
       <div
         className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[1.1rem] border border-white/60 p-5"
