@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
 import { MoveSheet } from "./MoveSheet";
 import { focusCard } from "@/lib/bank/cardFocus";
+import { CardFace } from "../CardFace";
 import { AddCardSheet } from "./AddCardSheet";
 import { PlansSheet } from "./Plans";
 import { initials, round2, spentInCategory, type SectionId, type Transaction } from "@/lib/bank/data";
@@ -201,13 +202,10 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
                 focusCard(c.id);
                 onNavigate("cards");
               }}
-              className={`bank-card tone-${c.tone} ${c.frozen ? "frozen" : ""} aspect-[1.586] w-64 shrink-0 rounded-2xl p-4 text-left`}
+              className="w-64 shrink-0 rounded-[1.1rem] text-left transition-transform duration-300 hover:-translate-y-1 active:scale-[0.98]"
               aria-label={`${c.label} ending ${c.last4}, ${c.frozen ? "frozen" : "active"}. Open this card.`}
             >
-              <div className="relative z-10 flex h-full flex-col justify-between">
-                <p className="font-display text-sm font-semibold">{c.label}</p>
-                <p className="font-mono text-sm tracking-widest">•••• {c.last4}{c.frozen ? " · Frozen" : ""}</p>
-              </div>
+              <CardFace card={c} holder={getProfileName().toUpperCase()} />
             </button>
           ))}
         </div>
