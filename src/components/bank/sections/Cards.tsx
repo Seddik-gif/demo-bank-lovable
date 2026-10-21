@@ -10,8 +10,7 @@ import { getProfileName } from "@/lib/bank/profile";
 import { useBank } from "@/lib/bank/store";
 import { SectionHeader } from "../Layout";
 import { AddCardSheet } from "./AddCardSheet";
-import { FINISH } from "../CardFace";
-import { CardVisual } from "../Card3D";
+import { CardFace, FINISH } from "../CardFace";
 import { motion, useReducedMotion } from "framer-motion";
 
 // A card is 22rem wide, close to the size of the screen. The track scrolls, and the card in front is centred.
@@ -36,7 +35,7 @@ const cvvOf = (card: Card) => card.cvv ?? "•••";
 function MetalFront({ card, active }: { card: Card; frozen: boolean; active: boolean }) {
   return (
     <div data-front className={`absolute inset-0 transition-opacity duration-500 ${active ? "" : "opacity-90"}`} style={faceStyle} role="img" aria-label={`${card.label} ending ${card.last4}${card.frozen ? ", frozen" : ""}`}>
-      <CardVisual card={card} />
+      <CardFace card={card} />
     </div>
   );
 }
