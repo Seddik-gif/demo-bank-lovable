@@ -57,6 +57,23 @@ const MENU: { key: SectionKey; title: string; detail: string; icon: LucideIcon }
   { key: "about", title: "About", detail: "Version and demo notes", icon: Info },
 ];
 
+/** The menu, grouped the way people look for things. */
+const GROUPS: { title: string; keys: SectionKey[] }[] = [
+  { title: "Your money", keys: ["accounts", "statements", "plans"] },
+  { title: "Preferences", keys: ["theme", "settings", "notifications"] },
+  { title: "Security and details", keys: ["personal", "security", "linked", "activity"] },
+  { title: "Help and more", keys: ["invite", "help", "about"] },
+];
+
+function ProfileStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-background/25 p-3 text-center ring-1 ring-white/10 backdrop-blur-md">
+      <p className="font-display text-xl font-semibold tabular-nums">{value}</p>
+      <p className="text-[11px] text-white/70">{label}</p>
+    </div>
+  );
+}
+
 function canTilt() {
   return (
     document.documentElement.getAttribute("data-motion") !== "reduce" &&
@@ -328,7 +345,7 @@ export function ProfileSheet({
   onClose: () => void;
   onSignOut: () => void;
 }) {
-  const { plan, setPlan } = useBank();
+  const { plan, setPlan, cards } = useBank();
   const settings = useSettings();
   const [open, setOpen] = useState<SectionKey | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
@@ -535,46 +552,63 @@ export function ProfileSheet({
     }
   };
 
+  // Full screen. Its own colour, because it sits outside the section wash.
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Profile">
-      <button className="fade-in absolute inset-0 bg-background/70" aria-label="Close profile" onClick={onClose} />
-      <div className="glass page-fade relative flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-b-none sm:rounded-3xl">
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <h2 className="text-lg font-semibold">Profile</h2>
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Profile" style={{ background: "linear-gradient(165deg, #4c1d95 0%, #1e1b4b 55%, #0b0a1f 100%)" }}>
+      <div className="page-fade relative flex h-full w-full flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-5 pb-3 pt-5">
+          <h2 className="font-display text-xl font-semibold">Profile</h2>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X className="h-4 w-4" aria-hidden /></button>
         </div>
 
-        {/* Main view: header and the list of sections */}
-        <div className="space-y-5 overflow-y-auto overscroll-contain p-4 pb-8">
-          <Tilt className="bank-card tone-violet rounded-2xl p-5">
-            <div className="relative z-10 flex items-center gap-4">
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-background/30 text-xl font-semibold">{initials(name)}</span>
+        {/* Main view: the person, a short summary, then the menu in groups */}
+        <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 pb-10">
+          <div className="relative overflow-hidden rounded-3xl bg-background/25 p-5 ring-1 ring-white/15 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white/20 text-xl font-semibold ring-2 ring-white/30">{initials(name)}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-lg font-semibold">{name}</p>
-                <p className="truncate text-sm opacity-80">{handle}</p>
+                <p className="truncate font-display text-xl font-semibold">{name}</p>
+                <p className="truncate text-sm text-white/70">{handle}</p>
               </div>
-              <span className="shrink-0 rounded-full bg-background/30 px-3 py-1 text-xs font-semibold">{PLAN_NAMES[plan]} plan</span>
             </div>
-          </Tilt>
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">{PLAN_NAMES[plan]} plan</span>
+              <button type="button" className="text-sm font-semibold text-white underline-offset-4 hover:underline" onClick={() => setOpen("personal")}>Edit details</button>
+            </div>
+          </div>
 
-          <Tilt className="glass">
-            <ul className="divide-y divide-border">
-              {MENU.map(({ key, title, detail: sub, icon: Icon }) => (
-                <li key={key}>
-                  <button type="button" onClick={() => (key === "plans" ? setPlansOpen(true) : setOpen(key))} className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-secondary">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-secondary text-accent">
-                      <Icon className="h-4 w-4" aria-hidden />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium">{title}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{sub}</span>
-                    </span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Tilt>
+          <div className="grid grid-cols-3 gap-3" aria-label="Your summary">
+            <ProfileStat label="Accounts" value={String(accounts.length)} />
+            <ProfileStat label="Cards" value={String(cards.length)} />
+            <ProfileStat label="Points" value={PROFILE.points.toLocaleString("en-US")} />
+          </div>
+
+          {GROUPS.map((group) => (
+            <section key={group.title} className="space-y-2" aria-label={group.title}>
+              <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-white/60">{group.title}</h3>
+              <ul className="glass divide-y divide-border overflow-hidden">
+                {group.keys.map((key) => {
+                  const item = MENU.find((m) => m.key === key);
+                  if (!item) return null;
+                  const Icon = item.icon;
+                  return (
+                    <li key={key}>
+                      <button type="button" onClick={() => (key === "plans" ? setPlansOpen(true) : setOpen(key))} className="row-hover flex w-full items-center gap-3 p-4 text-left">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-accent">
+                          <Icon className="h-4 w-4" aria-hidden />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium">{item.title}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{item.detail}</span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
 
           <div className="space-y-3">
             <button type="button" className="btn btn-ghost w-full" onClick={() => { onClose(); onSignOut(); }}>
