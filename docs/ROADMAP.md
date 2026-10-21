@@ -38,7 +38,9 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 - [x] 9. Light haptic feedback on phones that support it: payment success, a frozen card, an error.
   - Done: a short vibration for a successful payment or money in, a firmer double pulse for a refused or blocked payment, and one pulse when a card is frozen. A Haptics switch in Settings turns it off, separately from Sounds. Tests check the patterns (82 tests in total).
   - Not checked on a real phone yet. Desktop browsers do not vibrate, so please try it on your phone.
-- [ ] 10. Illustrations for empty states, onboarding, and the "Get your card now" banner.
+- [x] 10. Illustrations for empty states, onboarding, and the "Get your card now" banner.
+  - Done: one line-drawing style (`src/components/bank/Illustrations.tsx`): a receipt for no transactions, a chat for no messages, a pie chart for no budgets, a coin for no crypto, and a card on the "Get your card now" banner. They are hidden from screen readers, because the text beside them says what is happening. Pip already serves as the onboarding character.
+  - Not checked: the empty states themselves, since the test profile always has some activity. Each one is worth a look on a new account.
 
 ## Phase 1: Motion (branch `feat/motion`), finish
 

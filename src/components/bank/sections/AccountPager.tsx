@@ -10,6 +10,7 @@ import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { TransactionList } from "../TransactionList";
 import { CryptoWalletSheet } from "./CryptoWalletSheet";
+import { CoinIllustration, ReceiptIllustration } from "../Illustrations";
 
 const KIND_LABEL: Record<AccountKind, string> = {
   current: "Current account",
@@ -207,7 +208,10 @@ function AccountPage({ account: a, balance, transactions, onNavigate, actions }:
       <section className="glass min-w-0 p-4" aria-label="Latest activity">
         <p className="mb-1 text-sm font-semibold">Latest activity</p>
         {transactions.length === 0 ? (
-          <p className="py-2 text-xs text-muted-foreground">No transactions</p>
+          <div className="grid place-items-center gap-1 py-2 text-center">
+            <ReceiptIllustration className="h-14 w-14" />
+            <p className="text-xs text-muted-foreground">No transactions</p>
+          </div>
         ) : (
           <TransactionList items={transactions.slice(0, 3)} />
         )}
@@ -261,7 +265,10 @@ function CryptoDetails() {
   return (
     <div className="space-y-3 text-sm">
       {held.length === 0 ? (
-        <p className="text-xs text-muted-foreground">You don't hold any crypto yet. Receive some from another wallet.</p>
+        <div className="grid place-items-center gap-2 text-center">
+          <CoinIllustration className="h-14 w-14" />
+          <p className="text-xs text-muted-foreground">You don't hold any crypto yet. Receive some from another wallet.</p>
+        </div>
       ) : (
         <ul className="divide-y divide-border rounded-xl bg-secondary">
           {held.map((h) => (

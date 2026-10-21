@@ -3,6 +3,7 @@ import { formatMoney, round2, spentInCategory, type Budget } from "@/lib/bank/da
 import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { SectionHeader } from "../Layout";
+import { BudgetIllustration } from "../Illustrations";
 import { GoalsPanel, SchedulesPanel, SpendingChart } from "./MoneyPlanning";
 
 function BudgetRow({ budget }: { budget: Budget }) {
@@ -90,7 +91,10 @@ export function BudgetsSection() {
     <div className="space-y-6">
       <SectionHeader title="Budgets" subtitle="Monthly limits, tracked from your transactions." />
       {budgets.length === 0 ? (
-        <p className="glass p-6 text-center text-sm text-muted-foreground">No budgets yet. Add one below.</p>
+        <div className="glass grid place-items-center gap-2 p-6 text-center">
+          <BudgetIllustration className="h-20 w-20" />
+          <p className="text-sm text-muted-foreground">No budgets yet. Add one below.</p>
+        </div>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
           {budgets.map((b) => <BudgetRow key={b.id} budget={b} />)}

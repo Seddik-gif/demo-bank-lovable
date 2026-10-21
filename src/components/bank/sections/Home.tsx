@@ -4,6 +4,7 @@ import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditC
 import { MoveSheet } from "./MoveSheet";
 import { focusCard, startCardFlight } from "@/lib/bank/cardFocus";
 import { CardFace } from "../CardFace";
+import { CardIllustration } from "../Illustrations";
 import { AddCardSheet } from "./AddCardSheet";
 import { PlansSheet } from "./Plans";
 import { initials, round2, spentInCategory, type SectionId, type Transaction } from "@/lib/bank/data";
@@ -182,9 +183,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
             onClick={() => setCardOpen(true)}
             className="glass row-hover flex w-full items-center gap-4 p-4 text-left"
           >
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-gradient text-primary-foreground">
-              <CreditCard className="h-5 w-5" aria-hidden />
-            </span>
+            <CardIllustration className="h-16 w-16 shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold">Get your card now</span>
               <span className="block text-xs text-muted-foreground">Order a card in a minute. Then choose your plan.</span>

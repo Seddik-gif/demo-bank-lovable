@@ -20,6 +20,7 @@ import { useBank } from "@/lib/bank/store";
 import { useSettings } from "@/lib/bank/settings";
 import { Money, useMoneyText } from "../Money";
 import { SectionHeader } from "../Layout";
+import { ChatIllustration } from "../Illustrations";
 
 const GROUPS: ContactGroup[] = ["Friends", "Family", "Work"];
 const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" });
@@ -398,7 +399,12 @@ function ChatPane({ contact, onBack }: { contact: Contact; onBack: () => void })
       </header>
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4" role="log" aria-live="polite">
-        {thread.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No messages yet. Say hello below.</p>}
+        {thread.length === 0 && (
+          <div className="grid place-items-center gap-2 py-8 text-center">
+            <ChatIllustration className="h-20 w-20" />
+            <p className="text-sm text-muted-foreground">No messages yet. Say hello below.</p>
+          </div>
+        )}
         <ul className="space-y-3">
           {thread.map((m) => (
             <Bubble
