@@ -77,7 +77,7 @@ function MetalBack({ card, frozen, active, holder }: { card: Card; frozen: boole
 const faceStyle: CSSProperties = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" };
 
 export function CardsSection() {
-  const { cards, toggleCard } = useBank();
+  const { cards, toggleCard, markCardDelivered } = useBank();
   const [adding, setAdding] = useState(false);
   const [pos, setPos] = useState(0);
   const [flippedId, setFlippedId] = useState<string | null>(null);
@@ -181,7 +181,13 @@ export function CardsSection() {
         ))}
       </div>
 
-      {cardNow ? (
+      {cardNow && cardNow.delivered === false ? (
+        <div className="glass space-y-3 p-5 text-center text-sm">
+          <p className="font-semibold">{cardNow.label} is on its way</p>
+          <p className="text-xs text-muted-foreground">This physical card works once it arrives. Details, freeze and settings open after delivery.</p>
+          <button type="button" className="btn btn-primary" onClick={() => markCardDelivered(cardNow.id)}>Mark as delivered (demo)</button>
+        </div>
+      ) : cardNow ? (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button type="button" className="btn btn-ghost" onClick={() => setFlippedId(flippedId === cardNow.id ? null : cardNow.id)} aria-pressed={flippedId === cardNow.id}>

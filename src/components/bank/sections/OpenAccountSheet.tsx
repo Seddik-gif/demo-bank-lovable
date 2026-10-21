@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Bitcoin, ChevronLeft, Coins, PiggyBank, TrendingUp, Users, Globe2, X } from "lucide-react";
+import { Bitcoin, BookOpen, ChevronLeft, Coins, PiggyBank, TrendingUp, Users, Globe2, X } from "lucide-react";
 import { CURRENCY_PER_USD, SAVINGS_RATE, type NewAccountConfig } from "@/lib/bank/money";
 import { useBank } from "@/lib/bank/store";
+import { AddCardSheet } from "./AddCardSheet";
+import { AccountGuide } from "./AccountGuide";
 
 type Choice = "savings" | "currency" | "joint" | "crypto" | "invest" | "pockets";
 
@@ -24,6 +26,10 @@ export function OpenAccountSheet({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
 
+  const [guideFor, setGuideFor] = useState<Choice | null>(null);
+  // After an account is opened the customer orders its card, then reads the guide for that account type.
+  const [stage, setStage] = useState<{ kind: Choice; step: "card" | "guide" } | null>(null);
+
   const existing = (kind: Choice) => accounts.some((a) => a.kind === kind);
 
   const submit = (e: FormEvent) => {
@@ -40,8 +46,18 @@ export function OpenAccountSheet({ onClose }: { onClose: () => void }) {
     const res = openAccount(cfg);
     setError(res.ok ? "" : res.error);
     setDone(res.ok ? "Account opened. Find it under Profile → Accounts and on Home." : "");
-    if (res.ok) setChoice(null);
+    if (res.ok) {
+      setStage({ kind: choice, step: "card" });
+      setChoice(null);
+    }
   };
+
+  if (stage?.step === "card") {
+    return <AddCardSheet mandatory onClose={() => setStage({ kind: stage.kind, step: "guide" })} onAdded={() => undefined} />;
+  }
+  if (stage?.step === "guide") {
+    return <AccountGuide kind={stage.kind} doneLabel="Start using it" onClose={onClose} />;
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Open an account">
@@ -94,10 +110,14 @@ export function OpenAccountSheet({ onClose }: { onClose: () => void }) {
                 <p className="glass p-3 text-xs text-muted-foreground">Interest is shown as an estimate in this demo. It is not paid into the account.</p>
               )}
 
+              <button type="button" className="btn btn-ghost w-full" onClick={() => setGuideFor(choice)}>
+                <BookOpen className="h-4 w-4" aria-hidden /> How this account works
+              </button>
               <button type="submit" className="btn btn-primary w-full">Open {OPTIONS.find((o) => o.id === choice)?.title.toLowerCase()}</button>
               {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
             </form>
           )}
+          {guideFor && <AccountGuide kind={guideFor} onClose={() => setGuideFor(null)} />}
           {done && <p role="status" className="text-sm font-medium text-success">{done}</p>}
         </div>
       </div>

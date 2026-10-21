@@ -1,5 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
-import { ArrowRight, Snowflake } from "lucide-react";
+import { ArrowRight, ArrowUpDown, BookOpen, Snowflake } from "lucide-react";
+import { MoveSheet } from "./MoveSheet";
+import { AccountGuide } from "./AccountGuide";
 import { CRYPTO_HOLDINGS, INVEST_HOLDINGS, formatMoney, type Account, type AccountKind, type SectionId, type Transaction } from "@/lib/bank/data";
 import { CRYPTO_ASSETS, heldOf } from "@/lib/bank/crypto";
 import { CURRENCY_PER_USD, SAVINGS_RATE, cryptoValue, inCurrency, investmentsValue } from "@/lib/bank/money";
@@ -35,22 +37,36 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
   const { accounts, transactions, crypto, investments } = useBank();
   const [pos, setPos] = useState(0);
   const track = useRef<HTMLDivElement>(null);
+  const frame = useRef(0);
   // The main current account always comes first; the rest keep their opening order.
   const ordered = [...accounts].sort((a, b) => Number(a.id !== "main") - Number(b.id !== "main"));
   const active = Math.min(ordered.length - 1, Math.round(pos));
 
+  // While swiping, the page you are leaving shrinks and fades and the one you are reaching comes forward.
+  // Written straight to the DOM on each frame, so the motion follows your finger without re-rendering.
   const onScroll = () => {
     const el = track.current;
     if (!el || !el.clientWidth) return;
-    setPos(Math.max(0, Math.min(ordered.length - 1, el.scrollLeft / el.clientWidth)));
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      const width = el.clientWidth;
+      const origin = el.getBoundingClientRect().left;
+      Array.from(el.children).forEach((child, i) => {
+        const slide = child as HTMLElement;
+        const distance = Math.min(1, Math.abs((slide.getBoundingClientRect().left - origin) / width));
+        slide.style.transform = `scale(${1 - 0.06 * distance})`;
+        slide.style.opacity = String(1 - 0.4 * distance);
+        if (i === Math.round(el.scrollLeft / width)) setPos(i);
+      });
+    });
   };
   const goTo = (i: number) => track.current?.scrollTo({ left: i * (track.current?.clientWidth ?? 0), behavior: "smooth" });
 
   return (
     <section aria-label="Your accounts" className="space-y-3">
-      <div ref={track} onScroll={onScroll} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto scroll-smooth" aria-label="Accounts">
+      <div ref={track} onScroll={onScroll} className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain" aria-label="Accounts">
         {ordered.map((a) => (
-          <div key={a.id} className="w-full shrink-0 snap-center px-4">
+          <div key={a.id} className="w-full shrink-0 snap-center px-4 transition-[transform,opacity] duration-200 ease-out will-change-transform">
             <AccountPage account={a} balance={balanceOf(a, { crypto, investments })} transactions={activityOf(a, transactions)} onNavigate={onNavigate} />
           </div>
         ))}
@@ -66,19 +82,47 @@ export function AccountPager({ onNavigate }: { onNavigate: (id: SectionId) => vo
   );
 }
 
+/** Each type of account has its own colours, so you know where you are as you swipe. */
+const ACCOUNT_THEME: Record<AccountKind, { from: string; to: string; glow: string }> = {
+  current: { from: "#5b21b6", to: "#1e1b4b", glow: "#a78bfa" },
+  savings: { from: "#047857", to: "#052e2b", glow: "#6ee7b7" },
+  currency: { from: "#0369a1", to: "#0c1a3a", glow: "#7dd3fc" },
+  joint: { from: "#b45309", to: "#3b0d0d", glow: "#fcd34d" },
+  crypto: { from: "#a16207", to: "#1c1917", glow: "#fde68a" },
+  invest: { from: "#1d4ed8", to: "#0b1537", glow: "#67e8f9" },
+  pockets: { from: "#be185d", to: "#3b0764", glow: "#f9a8d4" },
+};
+
 function AccountPage({ account: a, balance, transactions, onNavigate }: { account: Account; balance: number; transactions: Transaction[]; onNavigate: (id: SectionId) => void }) {
   const kind = a.kind ?? "current";
+  const theme = ACCOUNT_THEME[kind];
+  const [moving, setMoving] = useState(false);
+  const [guiding, setGuiding] = useState(false);
+  // Crypto wallets hold no cash, so only the money accounts can be moved from.
+  const canMove = kind !== "crypto";
 
   // Account on top, a compact Latest activity card below. The card grows row by row, up to three.
   return (
-    <article className="reveal flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start" aria-label={a.name}>
+    <div className="reveal relative overflow-hidden rounded-[28px] p-3" style={{ background: `linear-gradient(160deg, ${theme.from} 0%, ${theme.to} 78%)` }}>
+      <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full opacity-40 blur-3xl" style={{ background: theme.glow }} aria-hidden />
+      <article className="relative flex flex-col gap-3 md:grid md:grid-cols-2 md:items-start" aria-label={a.name}>
       <section className="glass min-w-0 space-y-4 p-5" aria-label="Account details">
         <header className="space-y-1">
-          <p className="text-xs text-muted-foreground">{KIND_LABEL[kind]}</p>
+          <p className="text-xs text-white/70">{KIND_LABEL[kind]}</p>
           <h2 className="truncate text-lg font-semibold">{a.name}</h2>
           <p className="font-display text-3xl font-semibold tabular-nums"><Money value={balance} /></p>
-          {kind === "currency" && a.currency && <p className="text-xs text-muted-foreground">≈ {new Intl.NumberFormat("en-US", { style: "currency", currency: a.currency }).format(inCurrency(balance, a.currency))}</p>}
+          {kind === "currency" && a.currency && <p className="text-xs text-white/70">≈ {new Intl.NumberFormat("en-US", { style: "currency", currency: a.currency }).format(inCurrency(balance, a.currency))}</p>}
         </header>
+        <div className="grid grid-cols-2 gap-2">
+          {canMove ? (
+            <button type="button" className="btn btn-primary" onClick={() => setMoving(true)}>
+              <ArrowUpDown className="h-4 w-4" aria-hidden /> Move money
+            </button>
+          ) : <span />}
+          <button type="button" className="btn btn-ghost" onClick={() => setGuiding(true)}>
+            <BookOpen className="h-4 w-4" aria-hidden /> How it works
+          </button>
+        </div>
         <Details account={a} />
       </section>
 
@@ -95,7 +139,10 @@ function AccountPage({ account: a, balance, transactions, onNavigate }: { accoun
           </button>
         )}
       </section>
-    </article>
+      </article>
+      {moving && <MoveSheet initialFrom={a.id} onClose={() => setMoving(false)} />}
+      {guiding && <AccountGuide kind={kind} onClose={() => setGuiding(false)} />}
+    </div>
   );
 }
 
@@ -125,9 +172,6 @@ function BankDetails({ account: a }: { account: Account }) {
         <p className="text-xs text-muted-foreground">Demo rate: 1 USD = {CURRENCY_PER_USD[a.currency]} {a.currency}. Balances are kept in USD.</p>
       )}
       {kind === "joint" && <p className="text-xs text-muted-foreground">Shared with {a.coHolder}. Both holders can see and use this account.</p>}
-      <button type="button" className="btn btn-ghost w-full" onClick={() => document.getElementById("send-money")?.scrollIntoView({ behavior: "smooth" })}>
-        Move money
-      </button>
     </div>
   );
 }

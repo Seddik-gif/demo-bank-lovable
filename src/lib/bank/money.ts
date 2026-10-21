@@ -241,6 +241,7 @@ export interface NewCardConfig {
   tone: CardTone;
   onlinePayments: boolean;
   spendLimit: number;
+  delivery: "digital" | "physical";
 }
 
 export function validateNewCard(state: BankState, cfg: NewCardConfig): Result {
@@ -250,6 +251,7 @@ export function validateNewCard(state: BankState, cfg: NewCardConfig): Result {
   if (cfg.network !== "Visa" && cfg.network !== "Mastercard") return { ok: false, error: "Choose Visa or Mastercard." };
   if (!(CARD_TYPES as readonly string[]).includes(cfg.type)) return { ok: false, error: "Choose a card type." };
   if (!(CARD_TONES as readonly string[]).includes(cfg.tone)) return { ok: false, error: "Choose a finish for the card." };
+  if (cfg.delivery !== "digital" && cfg.delivery !== "physical") return { ok: false, error: "Choose digital or physical delivery." };
   return validateSpendLimit(cfg.spendLimit);
 }
 
@@ -273,6 +275,8 @@ export function applyAddCard(state: BankState, cfg: NewCardConfig, last4: string
     number: groups,
     expiry: `${month}/${year}`,
     cvv: digits(3),
+    delivery: cfg.delivery,
+    delivered: cfg.delivery === "digital",
   };
   return { ...state, cards: [...state.cards, card] };
 }
@@ -280,6 +284,11 @@ export function applyAddCard(state: BankState, cfg: NewCardConfig, last4: string
 /** Deletes a card. Its past transactions stay in the history. */
 export function applyRemoveCard(state: BankState, cardId: string): BankState {
   return { ...state, cards: state.cards.filter((c) => c.id !== cardId) };
+}
+
+/** Demo only: the physical card arrives. From then on it works like any other card. */
+export function applyCardDelivered(state: BankState, cardId: string): BankState {
+  return { ...state, cards: state.cards.map((c) => (c.id === cardId ? { ...c, delivered: true } : c)) };
 }
 
 // ---- Opening other accounts --------------------------------------------------------

@@ -91,6 +91,10 @@ export interface Card {
   number?: string;
   expiry?: string; // MM/YY
   cvv?: string;
+  /** How the card was ordered. Digital cards work at once; physical cards work once delivered. */
+  delivery?: "digital" | "physical";
+  /** False while a physical card is on its way. Missing means delivered. */
+  delivered?: boolean;
 }
 
 export interface Goal {

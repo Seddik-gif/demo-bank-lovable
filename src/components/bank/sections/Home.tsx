@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowDownLeft, ArrowUpRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
+import { MoveSheet } from "./MoveSheet";
 import { initials, round2, spentInCategory, type SectionId, type Transaction } from "@/lib/bank/data";
 import { Money, useMoneyText } from "../Money";
 import { useBank } from "@/lib/bank/store";
-import { useSettings } from "@/lib/bank/settings";
 import { getProfileName } from "@/lib/bank/profile";
 import { ProfileSheet } from "./Profile";
 import { PipAssistant } from "../PipAssistant";
@@ -93,7 +93,7 @@ function groupByDay(items: Transaction[]) {
 }
 
 export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: SectionId) => void; onSignOut: () => void }) {
-  const { accounts, transactions, cards, contacts, transfer, toggleCard } = useBank();
+  const { accounts, transactions, cards, contacts, toggleCard } = useBank();
   const fmt = useMoneyText();
   const [query, setQuery] = useState("");
   const [detail, setDetail] = useState<Transaction | null>(null);
@@ -103,21 +103,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
   // Crypto wallets and round-up pockets hold their money elsewhere, so they are not transfer targets.
   const bankAccounts = accounts.filter((a) => a.kind !== "crypto");
 
-  const { defaultAccountId } = useSettings();
-  const [fromId, setFromId] = useState(bankAccounts.find((a) => a.id === defaultAccountId)?.id ?? bankAccounts[0]?.id ?? "");
-  const [toId, setToId] = useState(bankAccounts[1]?.id ?? "");
-  const [amount, setAmount] = useState("");
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const value = amount.trim() === "" ? NaN : Number(amount);
-    const res = transfer(fromId, toId, value);
-    if (res.ok) {
-      setMsg({ ok: true, text: `Sent ${fmt(round2(value))}.` });
-      setAmount("");
-    } else setMsg({ ok: false, text: res.error });
-  };
+  const [moveOpen, setMoveOpen] = useState(false);
 
   const accountName = (id: string) => accounts.find((a) => a.id === id)?.name ?? "";
 
@@ -166,7 +152,7 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
       {/* Primary actions */}
       <div className="grid grid-cols-5 gap-2" role="group" aria-label="Quick actions">
         <QuickAction icon={PlusCircle} label="Add funds" onClick={() => setSheet("addfunds")} />
-        <QuickAction icon={Send} label="Send" onClick={() => document.getElementById("send-money")?.scrollIntoView({ behavior: "smooth" })} />
+        <QuickAction icon={Send} label="Send" onClick={() => setMoveOpen(true)} />
         <QuickAction icon={Receipt} label="Request" onClick={() => onNavigate("payments")} />
         <QuickAction icon={CreditCard} label="Cards" onClick={() => onNavigate("cards")} />
         <QuickAction icon={MoreHorizontal} label="More" onClick={() => setSheet("more")} />
@@ -238,30 +224,17 @@ export function HomeSection({ onNavigate, onSignOut }: { onNavigate: (id: Sectio
         </section>
       </div>
 
-      {/* Transfer */}
-      <section id="send-money" className="glass reveal scroll-mt-24 p-5 sm:p-6" aria-labelledby="transfer-title">
-        <h2 id="transfer-title" className="text-lg font-semibold">Move money between your accounts</h2>
-        <form onSubmit={submit} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
-          <label className="min-w-0 space-y-1.5 text-sm">
-            <span className="text-muted-foreground">From</span>
-            <select className="field" value={fromId} onChange={(e) => setFromId(e.target.value)}>
-              {bankAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </label>
-          <label className="min-w-0 space-y-1.5 text-sm">
-            <span className="text-muted-foreground">To</span>
-            <select className="field" value={toId} onChange={(e) => setToId(e.target.value)}>
-              {bankAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </label>
-          <label className="min-w-0 space-y-1.5 text-sm">
-            <span className="text-muted-foreground">Amount (USD)</span>
-            <input className="field" inputMode="decimal" type="number" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
-          </label>
-          <button type="submit" className="btn btn-primary">Transfer</button>
-        </form>
-        {msg && <p role="status" className={`mt-3 text-sm font-medium ${msg.ok ? "text-success" : "text-destructive"}`}>{msg.text}</p>}
+      {/* Move money: one button opens the move window, where you pick the accounts and the amount. */}
+      <section id="send-money" className="glass reveal flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6" aria-labelledby="transfer-title">
+        <div>
+          <h2 id="transfer-title" className="text-lg font-semibold">Move money</h2>
+          <p className="text-sm text-muted-foreground">Send money between your accounts. Pick where it comes from, where it goes and how much.</p>
+        </div>
+        <button type="button" className="btn btn-primary sm:shrink-0" onClick={() => setMoveOpen(true)}>
+          <ArrowUpDown className="h-4 w-4" aria-hidden /> Move money
+        </button>
       </section>
+      {moveOpen && <MoveSheet onClose={() => setMoveOpen(false)} />}
 
       {/* Transaction feed */}
       <section className="glass reveal p-5 sm:p-6" aria-labelledby="feed-title">

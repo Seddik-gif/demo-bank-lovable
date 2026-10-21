@@ -51,6 +51,7 @@ import {
   applyWithdrawal,
   applyTransactionCategory,
   applyAddCard,
+  applyCardDelivered,
   applyRemoveCard,
   applyNewAccount,
   validateNewAccount,
@@ -103,6 +104,7 @@ interface BankApi extends BankState {
   addFunds: (req: FundingRequest) => Result;
   receiveCrypto: (symbol: string, quantity: number, from: string) => Result;
   addCard: (cfg: NewCardConfig) => Result;
+  markCardDelivered: (cardId: string) => void;
   removeCard: (cardId: string) => Result;
   openAccount: (cfg: NewAccountConfig) => Result;
   investBuy: (accountId: string, symbol: string, usd: number) => Result;
@@ -423,8 +425,14 @@ export function BankProvider({ children }: { children: ReactNode }) {
     // Generated for the demo. Real card numbers are issued by the bank, never typed in here.
     const last4 = String(Math.floor(1000 + Math.random() * 9000));
     setState((s) => applyAddCard(s, cfg, last4));
-    track("card", `${cfg.label.trim()} added (${cfg.network} ${cfg.type})`);
+    track("card", `${cfg.label.trim()} ordered (${cfg.network} ${cfg.type}, ${cfg.delivery})`);
     return { ok: true };
+  }, []);
+
+  const markCardDelivered = useCallback((cardId: string) => {
+    const card = stateRef.current.cards.find((c) => c.id === cardId);
+    setState((s) => applyCardDelivered(s, cardId));
+    if (card) track("card", `${card.label} delivered`);
   }, []);
 
   const openAccount = useCallback((cfg: NewAccountConfig): Result => {
@@ -578,6 +586,7 @@ export function BankProvider({ children }: { children: ReactNode }) {
       addFunds,
       receiveCrypto,
       addCard,
+      markCardDelivered,
       removeCard,
       openAccount,
       investBuy,
