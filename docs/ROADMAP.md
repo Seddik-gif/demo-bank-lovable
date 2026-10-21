@@ -9,7 +9,7 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 - [x] 1. Automated tests for round-ups, transfers, investing, cards, new accounts, top-ups, fees, and crypto (37 tests passing).
 - [x] 2. Move the passcode rule out of the sign-up screen into the rules folder, and test it.
   - Check: `npm test` passes, and sign-up still rejects a weak passcode.
-- [ ] 3. Test saving and loading the app's data (bad or missing data falls back to the demo).
+- [x] 3. Test saving and loading the app's data (bad or missing data falls back to the demo).
   - Check: `npm test` passes.
 - [ ] 4. Contrast check on the cards and the coloured screens (text must be readable on each).
   - Check: every text and background pair reaches at least WCAG AA (4.5:1 for body text).
