@@ -139,7 +139,6 @@ function SellPanel({
   const [book, setBook] = useState<OrderBook | null>(null);
   const [bookError, setBookError] = useState("");
   const [error, setError] = useState("");
-  const [sold, setSold] = useState("");
   const [busy, setBusy] = useState(false);
 
   const held = heldOf(crypto, symbol);
@@ -186,8 +185,8 @@ function SellPanel({
       if (!fill.complete) return setError("The order book can't fill all of this amount right now. Try a smaller amount.");
       const res = onSell({ base: symbol, side: "sell", qty: fill.qty, quote: fill.quote, feeRate: FEE_RATE });
       if (!res.ok) return setError(res.error);
-      setSold(`Sold ${fill.qty} ${symbol} at an average ${formatMoney(fill.avgPrice)}. ${formatMoney(round2(fill.quote - round2(fill.quote * FEE_RATE)))} is in your Main current account.`);
-      setQty("");
+      // Success closes the sheet. The sale is announced by the notification toast and the bell.
+      onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : "The market is not available right now.");
     } finally {
@@ -199,7 +198,7 @@ function SellPanel({
     <div className="space-y-4">
       <label className="block space-y-1.5 text-sm">
         <span className="text-muted-foreground">Asset you hold</span>
-        <select className="field" value={symbol} onChange={(e) => { setSymbol(e.target.value); setQty(""); setBook(null); setError(""); setSold(""); }}>
+        <select className="field" value={symbol} onChange={(e) => { setSymbol(e.target.value); setQty(""); setBook(null); setError(""); }}>
           {symbols.map((s) => <option key={s} value={s}>{s} · you hold {crypto[s]}</option>)}
         </select>
       </label>
@@ -211,7 +210,7 @@ function SellPanel({
 
       <label className="block space-y-1.5 text-sm">
         <span className="text-muted-foreground">Amount to sell ({symbol})</span>
-        <input className="field tabular-nums" type="number" min="0" max={held} step="any" inputMode="decimal" value={qty} onChange={(e) => { setQty(e.target.value); setError(""); setSold(""); }} aria-label={`Amount of ${symbol} to sell`} aria-invalid={overHeld} />
+        <input className="field tabular-nums" type="number" min="0" max={held} step="any" inputMode="decimal" value={qty} onChange={(e) => { setQty(e.target.value); setError(""); }} aria-label={`Amount of ${symbol} to sell`} aria-invalid={overHeld} />
         {overHeld && <span className="block text-xs text-destructive">You can't sell more than you hold ({held} {symbol}).</span>}
       </label>
 
@@ -234,12 +233,6 @@ function SellPanel({
         {busy ? "Placing the order…" : `Sell ${valid ? quantity : ""} ${symbol}`.trim()}
       </button>
       {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
-      {sold && (
-        <div className="space-y-3">
-          <p role="status" className="text-sm font-medium text-success">{sold}</p>
-          <button type="button" className="btn btn-ghost w-full" onClick={onDone}>Done</button>
-        </div>
-      )}
     </div>
   );
 }

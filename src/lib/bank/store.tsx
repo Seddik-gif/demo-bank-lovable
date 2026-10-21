@@ -195,6 +195,9 @@ export function BankProvider({ children }: { children: ReactNode }) {
     setState(applyTrade(s, trade));
     const verb = trade.side === "buy" ? "Bought" : "Sold";
     track("trade", `${verb} ${trade.qty} ${trade.base} for ${formatMoney(round2(trade.quote))} (simulated)`);
+    if (trade.side === "sell") {
+      notify("in", "Crypto sold", `${trade.qty} ${trade.base} sold. The proceeds are in your Main current account.`);
+    }
     return { ok: true };
   }, []);
 
