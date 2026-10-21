@@ -20,8 +20,11 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 
 ## Phase 3: Design system and themes (branch `feat/design-system`)
 
-- [ ] 6. Move colours, type, spacing, and radii into named design tokens.
+- [x] 6. Move colours, type, spacing, and radii into named design tokens.
   - Check: the app looks the same as before.
+  - Done: radii, glass settings, type sizes, control spacing, and motion timings are in `src/styles/tokens.css`. The palette was already in `styles.css`.
+  - Still literal: the card colours in `CardFace.tsx` (they move with the themes in step 7), and the glass blur (see note below).
+  - Found: the glass blur was missing from the built CSS. The standard `backdrop-filter` line was being dropped next to its `-webkit-` copy, so the glass panels had no blur. It now shows, so the panels look more blurred than before.
 - [ ] 7. Add a second theme, and a theme switch in Settings.
   - Check: switching themes restyles the whole app, cards included.
 

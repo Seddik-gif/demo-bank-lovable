@@ -1,0 +1,35 @@
+/*
+ * Design tokens: the shared sizes, shapes, glass settings and motion timings the whole app uses.
+ * Change a value here and it changes everywhere it is used. Colours live in styles.css (palettes),
+ * and the card finishes live in CardFace.tsx.
+ */
+:root {
+  /* Corner radii */
+  --radius-panel: 1.375rem; /* glass panels and sheets */
+  --radius-control: 0.75rem; /* buttons and fields */
+  --radius-control-sm: 0.6rem; /* small buttons */
+  --radius-card: 1.1rem; /* bank cards */
+  --radius-pill: 999px; /* chips and dots */
+
+  /* Glass surfaces */
+  --glass-blur: 14px;
+  --glass-saturate: 130%;
+  --glass-edge: oklch(1 0 0 / 0.1);
+
+  /* Type sizes for the parts of the app that repeat */
+  --text-label: 0.8rem; /* small buttons and captions */
+  --text-body: 0.9rem; /* button labels */
+  --text-field: 0.95rem; /* form fields */
+
+  /* Spacing for the padding inside controls */
+  --space-control-x: 1rem;
+  --space-control-y: 0.6rem;
+  --space-control-sm-x: 0.7rem;
+  --space-control-sm-y: 0.4rem;
+
+  /* Motion: how long things take, and the easing curve everything shares */
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.45s;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

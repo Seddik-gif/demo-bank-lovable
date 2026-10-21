@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "./styles/tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -233,10 +234,10 @@ html {
 .glass {
   /* A lit top edge over the panel colour, so every surface reads as one layer above the background. */
   background: linear-gradient(165deg, oklch(1 0 0 / 0.09), transparent 42%), var(--card);
+  /* Literal values, kept in step with --glass-blur and --glass-saturate in tokens.css. */
   backdrop-filter: blur(14px) saturate(130%);
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
   border: 1px solid var(--border);
-  border-radius: 1.375rem;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-glass);
 }
 .text-gradient { background: var(--gradient-accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -244,8 +245,8 @@ html {
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  border-radius: 0.75rem; padding: 0.6rem 1rem; font-weight: 600; font-size: 0.9rem;
-  transition: transform 0.15s ease, filter 0.2s ease, background-color 0.2s ease; cursor: pointer;
+  border-radius: var(--radius-control); padding: var(--space-control-y) var(--space-control-x); font-weight: 600; font-size: var(--text-body);
+  transition: transform var(--duration-fast) ease, filter var(--duration-base) ease, background-color var(--duration-base) ease; cursor: pointer;
 }
 .btn:active { transform: scale(0.97); }
 .btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
@@ -255,19 +256,19 @@ html {
 .btn-ghost { background: var(--secondary); border: 1px solid var(--border); color: var(--foreground); }
 .btn-ghost:hover { background: var(--input); }
 .btn-danger { background: var(--destructive); color: var(--primary-foreground); }
-.btn-sm { padding: 0.4rem 0.7rem; font-size: 0.8rem; border-radius: 0.6rem; }
+.btn-sm { padding: var(--space-control-sm-y) var(--space-control-sm-x); font-size: var(--text-label); border-radius: var(--radius-control-sm); }
 
 .field {
-  width: 100%; min-width: 0; border-radius: 0.75rem; padding: 0.6rem 0.8rem;
-  background: var(--secondary); border: 1px solid var(--input); color: var(--foreground); font-size: 0.95rem;
+  width: 100%; min-width: 0; border-radius: var(--radius-control); padding: var(--space-control-y) 0.8rem;
+  background: var(--secondary); border: 1px solid var(--input); color: var(--foreground); font-size: var(--text-field);
 }
 .field:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px oklch(0.75 0.14 210 / 0.25); }
 select.field option { background: var(--popover); color: var(--foreground); }
 
-.page-fade { animation: fade-up 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.grow-bar { transform-origin: left; animation: grow 1s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.drawer-in { animation: slide-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.fade-in { animation: fade 0.25s ease both; }
+.page-fade { animation: fade-up var(--duration-slow) var(--ease-standard) both; }
+.grow-bar { transform-origin: left; animation: grow 1s var(--ease-standard) both; }
+.drawer-in { animation: slide-in var(--duration-base) var(--ease-standard) both; }
+.fade-in { animation: fade var(--duration-base) ease both; }
 .shake { animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 @keyframes shake {
   10%, 90% { transform: translateX(-2px); }
