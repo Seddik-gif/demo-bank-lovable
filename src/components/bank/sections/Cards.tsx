@@ -10,6 +10,7 @@ import { getProfileName } from "@/lib/bank/profile";
 import { useBank } from "@/lib/bank/store";
 import { SectionHeader } from "../Layout";
 import { AddCardSheet } from "./AddCardSheet";
+import { CardFace, FINISH } from "../CardFace";
 
 // A card is 22rem wide, close to the size of the screen. The track scrolls, and the card in front is centred.
 const SLOT = "22rem";
@@ -29,36 +30,36 @@ const cardNumber = (card: Card) => card.number ?? `•••• •••• •
 const expiryOf = (card: Card) => card.expiry ?? "••/••";
 const cvvOf = (card: Card) => card.cvv ?? "•••";
 
-function MetalFront({ card, frozen, active }: { card: Card; frozen: boolean; active: boolean }) {
+/** The front of a card: the same glass design as on Home. */
+function MetalFront({ card, active }: { card: Card; frozen: boolean; active: boolean }) {
   return (
-    <div className={`metal-card tone-${card.tone} ${frozen ? "is-frozen" : ""} ${active ? "is-active" : ""} absolute inset-0 flex flex-col justify-between p-6`} style={faceStyle} role="img" aria-label={`${card.label} ending ${card.last4}${frozen ? ", frozen" : ""}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate font-display text-xl font-semibold drop-shadow">{card.label}</p>
-          <p className="text-xs opacity-80">{card.type}</p>
-        </div>
-        {frozen && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-black/35 px-2 py-0.5 text-xs font-semibold">
-            <Snowflake className="h-3 w-3" aria-hidden /> Frozen
-          </span>
-        )}
-      </div>
-      <span className="h-9 w-12 rounded-md bg-gradient-to-br from-yellow-100 via-amber-200 to-yellow-500 shadow-inner" aria-hidden />
-      <div className="flex items-end justify-between gap-2">
-        <p className="font-mono text-lg tracking-widest drop-shadow">•••• •••• •••• {card.last4}</p>
-        <p className="shrink-0 font-display text-xl font-bold italic drop-shadow">{card.network}</p>
-      </div>
+    <div className={`absolute inset-0 transition-opacity duration-500 ${active ? "" : "opacity-90"}`} style={faceStyle} role="img" aria-label={`${card.label} ending ${card.last4}${card.frozen ? ", frozen" : ""}`}>
+      <CardFace card={card} />
     </div>
   );
 }
 
-function MetalBack({ card, frozen, active, holder }: { card: Card; frozen: boolean; active: boolean; holder: string }) {
+/** The back of a card: the details, on the same coloured glass. */
+function MetalBack({ card, holder }: { card: Card; frozen: boolean; active: boolean; holder: string }) {
+  const { background, ink } = FINISH[card.tone];
   return (
-    <div className={`metal-card tone-${card.tone} ${frozen ? "is-frozen" : ""} ${active ? "is-active" : ""} absolute inset-0 flex flex-col justify-between overflow-hidden`} style={{ ...faceStyle, transform: "rotateY(180deg)" }} role="group" aria-label={`${card.label} details`}>
-      <div className="mt-6 h-11 bg-black/85" aria-hidden />
-      <div className="space-y-3 px-6">
+    <div
+      className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-[1.1rem] border border-white/60 p-5"
+      style={{
+        ...faceStyle,
+        transform: "rotateY(180deg)",
+        background,
+        color: ink,
+        backdropFilter: "blur(14px) saturate(190%)",
+        WebkitBackdropFilter: "blur(14px) saturate(190%)",
+        boxShadow: "0 34px 44px -22px rgba(20,10,60,0.6), inset 0 1px 0 rgba(255,255,255,0.7)",
+      }}
+      role="group"
+      aria-label={`${card.label} details`}
+    >
+      <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <div className="h-9 flex-1 rounded-sm bg-white/85 px-3 py-1.5 text-right font-mono text-sm text-black/80">{cvvOf(card)}</div>
+          <div className="h-9 flex-1 rounded-sm bg-white/80 px-3 py-1.5 text-right font-mono text-sm text-black/80">{cvvOf(card)}</div>
           <p className="text-[10px] uppercase tracking-widest opacity-80">CVV</p>
         </div>
         <div className="space-y-2 text-sm">
@@ -67,7 +68,7 @@ function MetalBack({ card, frozen, active, holder }: { card: Card; frozen: boole
           <p className="flex justify-between gap-3"><span className="opacity-70">Expires</span><span className="font-mono">{expiryOf(card)}</span></p>
         </div>
       </div>
-      <div className="flex items-center justify-between px-6 pb-5 text-xs opacity-80">
+      <div className="flex items-center justify-between text-xs opacity-80">
         <span>{card.type}</span>
         <span className="font-display text-base font-bold italic">{card.network}</span>
       </div>

@@ -5,7 +5,7 @@ import type { Card, CardTone } from "@/lib/bank/data";
  * The card palette from the reference, made see-through: each gradient keeps its colours but at about 80% opacity,
  * so the card looks like tinted glass. Each finish also has the colour its text should be.
  */
-const FINISH: Record<CardTone, { background: string; ink: string }> = {
+export const FINISH: Record<CardTone, { background: string; ink: string }> = {
   violet: { background: "linear-gradient(135deg, rgba(224,33,138,0.44) 0%, rgba(157,43,214,0.42) 55%, rgba(74,20,216,0.46) 100%)", ink: "#ffffff" },
   gold: { background: "linear-gradient(135deg, rgba(255,143,177,0.42) 0%, rgba(255,196,163,0.4) 45%, rgba(253,246,178,0.42) 100%)", ink: "#1e1b4b" },
   cyan: { background: "linear-gradient(135deg, rgba(157,195,255,0.42) 0%, rgba(191,230,247,0.4) 50%, rgba(185,246,216,0.42) 100%)", ink: "#1e1b4b" },
