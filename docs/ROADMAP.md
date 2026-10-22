@@ -76,7 +76,8 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 
 ## Finish
 
-- [ ] 18. Merge every branch into `main` in the order above, test the result, and tag `v2.0`.
-  - Merged: `feat/quality` was fast-forwarded into `main` and pushed (`main` at `e8f91b2`). This was done at your request before steps 11 and 17 were finished.
+- [x] 18. Merge every branch into `main` in the order above, test the result, and tag `v2.0`.
+  - Merged: `feat/quality` was fast-forwarded into `main` and pushed. This was done at your request before steps 11 and 17 were finished.
   - Tests on the merged code: 95 passed, and the TypeScript check is clean.
-  - Still open: step 17 and the phone checks in step 11, then the `v2.0` tag.
+  - Tagged: annotated tag `v2.0` on `main`, pushed to GitHub. It was created before steps 11 and 17 were finished, at your request.
+  - Still open: the phone touch check in step 11 and the Capacitor packaging in step 17.
