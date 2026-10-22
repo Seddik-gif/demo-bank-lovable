@@ -3,9 +3,9 @@ import { formatMoney, round2, CRYPTO_HOLDINGS, INVEST_HOLDINGS, type Holding } f
 import { ASSET_NAMES, acquireMarket, useMarket } from "@/lib/bank/market";
 import { acquireStocks, STOCKS, useStockQuotes } from "@/lib/bank/stocks";
 import { StockMarket } from "./StockMarket";
-import { OpenAccountSheet } from "./OpenAccountSheet";
+import { OpenAccountSheet, type Choice } from "./OpenAccountSheet";
 import { useBank } from "@/lib/bank/store";
-import { TrendingUp } from "lucide-react";
+import { Bitcoin, TrendingUp } from "lucide-react";
 import { Money } from "../Money";
 import { SectionHeader } from "../Layout";
 import { CoinIllustration } from "../Illustrations";
@@ -82,10 +82,11 @@ function HoldingsView({ title, subtitle, items, unitLabel, empty }: { title: str
 }
 
 export function CryptoSection() {
-  const { crypto } = useBank();
+  const { accounts, crypto } = useBank();
   const { tickers } = useMarket();
   const [selected, setSelected] = useState<string | null>(null);
   const [wallet, setWallet] = useState<"receive" | "sell" | null>(null);
+  const hasCryptoAccount = accounts.some((a) => a.kind === "crypto");
 
   useEffect(() => acquireMarket(), []);
 
@@ -108,6 +109,16 @@ export function CryptoSection() {
 
   return (
     <div className="space-y-6">
+      {!hasCryptoAccount && (
+        <OpenAccountPanel
+          kind="crypto"
+          icon={Bitcoin}
+          label="Create a crypto account"
+          title="Create a Crypto Account"
+          detail="No card needed. Receive crypto from another wallet, or sell what you hold to your main account."
+          cta="Create a Crypto Account"
+        />
+      )}
       <HoldingsView title="Crypto wallet" subtitle="Your holdings, with the live market below. Tap an asset to trade." items={items} unitLabel={(h) => `${qtyLabel(h.quantity)} ${h.symbol}`} />
       <section className="glass reveal flex flex-wrap items-center justify-between gap-3 p-5" aria-label="Wallet actions">
         <div className="min-w-0">
@@ -127,20 +138,20 @@ export function CryptoSection() {
 
 const qtyLabel = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 6 });
 
-/** Shown on the Invest page until the customer has an Investments account. Opens its setup, with no card needed. */
-function OpenInvestingPanel() {
+/** Shown on a page until the customer has that account. Opens its setup; these accounts need no card. */
+function OpenAccountPanel({ kind, icon: Icon, title, detail, cta, label }: { kind: Choice; icon: typeof TrendingUp; title: string; detail: string; cta: string; label: string }) {
   const [opening, setOpening] = useState(false);
   return (
-    <section className="glass reveal flex flex-wrap items-center justify-between gap-4 p-5" aria-label="Open an investing account">
+    <section className="glass reveal flex flex-wrap items-center justify-between gap-4 p-5" aria-label={label}>
       <div className="flex min-w-0 items-center gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-secondary text-accent" aria-hidden><TrendingUp className="h-5 w-5" /></span>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-secondary text-accent" aria-hidden><Icon className="h-5 w-5" /></span>
         <div className="min-w-0">
-          <p className="font-semibold">Open an Investing Account</p>
-          <p className="text-xs text-muted-foreground">No card needed. Move cash in from another account, then buy funds, bonds or stocks.</p>
+          <p className="font-semibold">{title}</p>
+          <p className="text-xs text-muted-foreground">{detail}</p>
         </div>
       </div>
-      <button type="button" className="btn btn-primary rounded-full" onClick={() => setOpening(true)}>Open an Investing Account</button>
-      {opening && <OpenAccountSheet initial="invest" onClose={() => setOpening(false)} />}
+      <button type="button" className="btn btn-primary rounded-full" onClick={() => setOpening(true)}>{cta}</button>
+      {opening && <OpenAccountSheet initial={kind} onClose={() => setOpening(false)} />}
     </section>
   );
 }
@@ -165,7 +176,16 @@ export function InvestSection() {
 
   return (
     <div className="space-y-6">
-      {!hasInvestAccount && <OpenInvestingPanel />}
+      {!hasInvestAccount && (
+        <OpenAccountPanel
+          kind="invest"
+          icon={TrendingUp}
+          label="Open an investing account"
+          title="Open an Investing Account"
+          detail="No card needed. Move cash in from another account, then buy funds, bonds or stocks."
+          cta="Open an Investing Account"
+        />
+      )}
       <HoldingsView
         title="Investments"
         subtitle="Funds, bonds and stocks you hold."

@@ -47,8 +47,8 @@ export function OpenAccountSheet({ onClose, initial }: { onClose: () => void; in
     setError(res.ok ? "" : res.error);
     setDone(res.ok ? "Account opened. Find it under Profile → Accounts and on Home." : "");
     if (res.ok) {
-      // An investing account is funded from cash, so it needs no card.
-      setStage({ kind: choice, step: choice === "invest" ? "guide" : "card" });
+      // Investing and crypto accounts are funded from cash, so they need no card.
+      setStage({ kind: choice, step: choice === "invest" || choice === "crypto" ? "guide" : "card" });
       setChoice(null);
     }
   };
