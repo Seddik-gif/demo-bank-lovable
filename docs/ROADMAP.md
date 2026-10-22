@@ -1,6 +1,6 @@
 # Roadmap to version 2.0
 
-We work through this list in order. Each step is done when its check passes. Each phase has its own branch, and nothing merges into `main` until every phase is finished.
+We work through this list in order. Each step is done when its check passes. Each phase has its own branch. Merging into `main` was planned for the end, but the phases up to Phase 5 were merged early at your request (see step 18).
 
 Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-lovable-v1.0-baseline.zip`.
 
@@ -77,3 +77,6 @@ Baseline to return to at any time: tag `v1.0-baseline`, and `backups/demo-bank-l
 ## Finish
 
 - [ ] 18. Merge every branch into `main` in the order above, test the result, and tag `v2.0`.
+  - Merged: `feat/quality` was fast-forwarded into `main` and pushed (`main` at `e8f91b2`). This was done at your request before steps 11 and 17 were finished.
+  - Tests on the merged code: 95 passed, and the TypeScript check is clean.
+  - Still open: step 17 and the phone checks in step 11, then the `v2.0` tag.
