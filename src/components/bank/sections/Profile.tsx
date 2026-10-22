@@ -375,6 +375,17 @@ function ActivityPanel() {
 }
 
 /** Profile sheet. The main view lists sections; each one opens in its own window. Settings are saved on this device. */
+/** The two colours of the page the profile opened from, read from its section wash. Falls back to the Home purple. */
+function sectionWash(): { from: string; to: string } {
+  const root = document.querySelector<HTMLElement>("[data-section]");
+  if (!root) return { from: "#5b21b6", to: "#1e1b4b" };
+  const style = getComputedStyle(root);
+  return {
+    from: style.getPropertyValue("--wash-a").trim() || "#5b21b6",
+    to: style.getPropertyValue("--wash-b").trim() || "#1e1b4b",
+  };
+}
+
 export function ProfileSheet({
   accounts,
   transactions,
@@ -593,9 +604,16 @@ export function ProfileSheet({
     }
   };
 
-  // Full screen. Its own colour, because it sits outside the section wash.
+  // Full screen, in the colours of the page it opened from, so it reads as the same page with the profile on top.
+  const wash = sectionWash();
   return createPortal(
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Profile" style={{ background: "linear-gradient(165deg, #4c1d95 0%, #1e1b4b 55%, #0b0a1f 100%)" }}>
+    <div
+      className="fixed inset-0 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Profile"
+      style={{ background: `linear-gradient(165deg, ${wash.from} 0%, ${wash.to} 85%)` }}
+    >
       <SheetPanel className="relative flex h-full w-full flex-col overflow-hidden">
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
           <h2 className="font-display text-xl font-semibold">Profile</h2>
