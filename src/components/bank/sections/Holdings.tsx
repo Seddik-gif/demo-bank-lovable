@@ -3,7 +3,9 @@ import { formatMoney, round2, CRYPTO_HOLDINGS, INVEST_HOLDINGS, type Holding } f
 import { ASSET_NAMES, acquireMarket, useMarket } from "@/lib/bank/market";
 import { acquireStocks, STOCKS, useStockQuotes } from "@/lib/bank/stocks";
 import { StockMarket } from "./StockMarket";
+import { OpenAccountSheet } from "./OpenAccountSheet";
 import { useBank } from "@/lib/bank/store";
+import { TrendingUp } from "lucide-react";
 import { Money } from "../Money";
 import { SectionHeader } from "../Layout";
 import { CoinIllustration } from "../Illustrations";
@@ -125,10 +127,29 @@ export function CryptoSection() {
 
 const qtyLabel = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 6 });
 
+/** Shown on the Invest page until the customer has an Investments account. Opens its setup, with no card needed. */
+function OpenInvestingPanel() {
+  const [opening, setOpening] = useState(false);
+  return (
+    <section className="glass reveal flex flex-wrap items-center justify-between gap-4 p-5" aria-label="Open an investing account">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-secondary text-accent" aria-hidden><TrendingUp className="h-5 w-5" /></span>
+        <div className="min-w-0">
+          <p className="font-semibold">Open an Investing Account</p>
+          <p className="text-xs text-muted-foreground">No card needed. Move cash in from another account, then buy funds, bonds or stocks.</p>
+        </div>
+      </div>
+      <button type="button" className="btn btn-primary rounded-full" onClick={() => setOpening(true)}>Open an Investing Account</button>
+      {opening && <OpenAccountSheet initial="invest" onClose={() => setOpening(false)} />}
+    </section>
+  );
+}
+
 export function InvestSection() {
-  const { investments } = useBank();
+  const { accounts, investments } = useBank();
   const quotes = useStockQuotes();
   useEffect(() => acquireStocks(), []);
+  const hasInvestAccount = accounts.some((a) => a.kind === "invest");
 
   // Funds and bonds at their demo prices, and stocks at their live prices.
   const funds = INVEST_HOLDINGS.map((h) => ({ ...h, quantity: investments[h.symbol] ?? 0 })).filter((h) => h.quantity > 0);
@@ -144,6 +165,7 @@ export function InvestSection() {
 
   return (
     <div className="space-y-6">
+      {!hasInvestAccount && <OpenInvestingPanel />}
       <HoldingsView
         title="Investments"
         subtitle="Funds, bonds and stocks you hold."

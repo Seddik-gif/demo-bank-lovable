@@ -6,7 +6,7 @@ import { useBank } from "@/lib/bank/store";
 import { AddCardSheet } from "./AddCardSheet";
 import { AccountGuide } from "./AccountGuide";
 
-type Choice = "savings" | "currency" | "joint" | "crypto" | "invest" | "pockets";
+export type Choice = "savings" | "currency" | "joint" | "crypto" | "invest" | "pockets";
 
 const OPTIONS: { id: Choice; title: string; detail: string; icon: typeof PiggyBank }[] = [
   { id: "savings", title: "Savings account", detail: `Keep cash apart. Interest is shown at ${(SAVINGS_RATE * 100).toFixed(2)}% a year. You can take money out at any time.`, icon: PiggyBank },
@@ -17,10 +17,10 @@ const OPTIONS: { id: Choice; title: string; detail: string; icon: typeof PiggyBa
   { id: "pockets", title: "Round-up account", detail: "Spare change from your payments is saved here automatically. You can switch it off.", icon: Coins },
 ];
 
-/** Opens another kind of account next to the main current account. */
-export function OpenAccountSheet({ onClose }: { onClose: () => void }) {
+/** Opens another kind of account next to the main current account. `initial` jumps straight to one account's setup. */
+export function OpenAccountSheet({ onClose, initial }: { onClose: () => void; initial?: Choice }) {
   const { openAccount, accounts } = useBank();
-  const [choice, setChoice] = useState<Choice | null>(null);
+  const [choice, setChoice] = useState<Choice | null>(initial ?? null);
   const [currency, setCurrency] = useState("GBP");
   const [coHolder, setCoHolder] = useState("");
   const [error, setError] = useState("");
@@ -47,7 +47,8 @@ export function OpenAccountSheet({ onClose }: { onClose: () => void }) {
     setError(res.ok ? "" : res.error);
     setDone(res.ok ? "Account opened. Find it under Profile → Accounts and on Home." : "");
     if (res.ok) {
-      setStage({ kind: choice, step: "card" });
+      // An investing account is funded from cash, so it needs no card.
+      setStage({ kind: choice, step: choice === "invest" ? "guide" : "card" });
       setChoice(null);
     }
   };
