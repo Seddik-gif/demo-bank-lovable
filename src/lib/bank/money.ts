@@ -16,6 +16,7 @@ import {
   type Result,
   type Transaction,
 } from "./data";
+import { STOCKS } from "./stocks";
 
 const MAX_NAME = 40;
 export const MAX_GOAL_TARGET = 1_000_000;
@@ -375,20 +376,34 @@ export function applyRoundUpToggle(state: BankState, on: boolean): BankState {
 
 // ---- Investments -------------------------------------------------------------------
 
-export function validateInvestBuy(state: BankState, accountId: string, symbol: string, usd: number): Result {
+/**
+ * The name and fixed demo price of an investment: a fund, bond or stock. Stocks also have a live
+ * price, which the Invest page passes in as `price`. Without one, the demo price is used.
+ */
+function instrumentOf(symbol: string): { name: string; price: number } | null {
+  const holding = INVEST_HOLDINGS.find((h) => h.symbol === symbol);
+  if (holding) return { name: holding.name, price: holding.price };
+  const stock = STOCKS.find((s) => s.symbol === symbol);
+  if (stock) return { name: stock.name, price: stock.basePrice };
+  return null;
+}
+
+export function validateInvestBuy(state: BankState, accountId: string, symbol: string, usd: number, price?: number): Result {
   const account = state.accounts.find((a) => a.id === accountId && a.kind === "invest");
-  const instrument = INVEST_HOLDINGS.find((h) => h.symbol === symbol);
+  const instrument = instrumentOf(symbol);
   if (!account) return { ok: false, error: "Choose your investment account." };
   if (!instrument) return { ok: false, error: "Choose an investment." };
+  if (price !== undefined && (!Number.isFinite(price) || price <= 0)) return { ok: false, error: "The price is not available right now." };
   if (!Number.isFinite(usd) || usd < 1) return { ok: false, error: "Invest at least $1." };
   if (round2(usd) > account.balance) return { ok: false, error: `Not enough cash in ${account.name}: it has ${formatMoney(account.balance)}. Move money in first.` };
   return { ok: true };
 }
 
-export function applyInvestBuy(state: BankState, accountId: string, symbol: string, usd: number, now = new Date()): BankState {
-  const instrument = INVEST_HOLDINGS.find((h) => h.symbol === symbol)!;
+export function applyInvestBuy(state: BankState, accountId: string, symbol: string, usd: number, price?: number, now = new Date()): BankState {
+  const instrument = instrumentOf(symbol)!;
+  const unitPrice = price ?? instrument.price;
   const value = round2(usd);
-  const units = Math.round((value / instrument.price) * 1e6) / 1e6;
+  const units = Math.round((value / unitPrice) * 1e6) / 1e6;
   const txn: Transaction = { id: uid(), date: now.toISOString(), description: `Bought ${symbol} (${instrument.name})`, category: "Investing", amount: -value, accountId };
   return {
     ...state,
@@ -398,7 +413,8 @@ export function applyInvestBuy(state: BankState, accountId: string, symbol: stri
   };
 }
 
-export function validateInvestSell(state: BankState, accountId: string, symbol: string, units: number): Result {
+export function validateInvestSell(state: BankState, accountId: string, symbol: string, units: number, price?: number): Result {
+  if (price !== undefined && (!Number.isFinite(price) || price <= 0)) return { ok: false, error: "The price is not available right now." };
   if (!state.accounts.some((a) => a.id === accountId && a.kind === "invest")) return { ok: false, error: "Choose your investment account." };
   const held = state.investments[symbol] ?? 0;
   if (held <= 0) return { ok: false, error: `You don't hold any ${symbol}.` };
@@ -407,9 +423,9 @@ export function validateInvestSell(state: BankState, accountId: string, symbol: 
   return { ok: true };
 }
 
-export function applyInvestSell(state: BankState, accountId: string, symbol: string, units: number, now = new Date()): BankState {
-  const instrument = INVEST_HOLDINGS.find((h) => h.symbol === symbol)!;
-  const value = round2(units * instrument.price);
+export function applyInvestSell(state: BankState, accountId: string, symbol: string, units: number, price?: number, now = new Date()): BankState {
+  const instrument = instrumentOf(symbol)!;
+  const value = round2(units * (price ?? instrument.price));
   const left = Math.max(0, Math.round(((state.investments[symbol] ?? 0) - units) * 1e6) / 1e6);
   const txn: Transaction = { id: uid(), date: now.toISOString(), description: `Sold ${symbol} (${instrument.name})`, category: "Investing", amount: value, accountId };
   return {
@@ -422,7 +438,9 @@ export function applyInvestSell(state: BankState, accountId: string, symbol: str
 
 /** Value of the holdings in USD, at the demo prices. */
 export function investmentsValue(investments: Record<string, number>): number {
-  return round2(INVEST_HOLDINGS.reduce((s, h) => s + (investments[h.symbol] ?? 0) * h.price, 0));
+  // Funds and bonds use their demo prices; stocks use their starting prices here. The Invest page shows live values.
+  const prices = [...INVEST_HOLDINGS.map((h) => ({ symbol: h.symbol, price: h.price })), ...STOCKS.map((s) => ({ symbol: s.symbol, price: s.basePrice }))];
+  return round2(prices.reduce((s, p) => s + (investments[p.symbol] ?? 0) * p.price, 0));
 }
 
 /** Value of the crypto holdings in USD, at the demo prices. */

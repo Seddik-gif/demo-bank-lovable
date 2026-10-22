@@ -108,8 +108,8 @@ interface BankApi extends BankState {
   markCardDelivered: (cardId: string) => void;
   removeCard: (cardId: string) => Result;
   openAccount: (cfg: NewAccountConfig) => Result;
-  investBuy: (accountId: string, symbol: string, usd: number) => Result;
-  investSell: (accountId: string, symbol: string, units: number) => Result;
+  investBuy: (accountId: string, symbol: string, usd: number, price?: number) => Result;
+  investSell: (accountId: string, symbol: string, units: number, price?: number) => Result;
   setRoundUp: (on: boolean) => void;
   startNewAccount: () => void;
   setTransactionCategory: (txnId: string, category: string) => Result;
@@ -450,24 +450,24 @@ export function BankProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
-  const investBuy = useCallback((accountId: string, symbol: string, usd: number): Result => {
-    const check = validateInvestBuy(stateRef.current, accountId, symbol, usd);
+  const investBuy = useCallback((accountId: string, symbol: string, usd: number, price?: number): Result => {
+    const check = validateInvestBuy(stateRef.current, accountId, symbol, usd, price);
     if (!check.ok) {
       track("trade_rejected", `Invest ${symbol}: ${check.error}`);
       return check;
     }
-    setState((s) => applyInvestBuy(s, accountId, symbol, usd));
+    setState((s) => applyInvestBuy(s, accountId, symbol, usd, price));
     track("trade", `Bought ${symbol} for ${formatMoney(round2(usd))} (simulated)`);
     return { ok: true };
   }, []);
 
-  const investSell = useCallback((accountId: string, symbol: string, units: number): Result => {
-    const check = validateInvestSell(stateRef.current, accountId, symbol, units);
+  const investSell = useCallback((accountId: string, symbol: string, units: number, price?: number): Result => {
+    const check = validateInvestSell(stateRef.current, accountId, symbol, units, price);
     if (!check.ok) {
       track("trade_rejected", `Sell ${symbol}: ${check.error}`);
       return check;
     }
-    setState((s) => applyInvestSell(s, accountId, symbol, units));
+    setState((s) => applyInvestSell(s, accountId, symbol, units, price));
     track("trade", `Sold ${units} ${symbol} (simulated)`);
     return { ok: true };
   }, []);

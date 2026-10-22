@@ -16,6 +16,7 @@ import {
   MAX_CARDS,
 } from "../money";
 import { applyTransfer, validateTransfer } from "../data";
+import { STOCKS, changeOf, simulatedNext } from "../stocks";
 
 /** A new profile (only the main account, at $0) with some money in the main account and an optional round-up account. */
 function profile(mainBalance: number, withRoundUp = true): BankState {
@@ -144,6 +145,59 @@ describe("investing", () => {
     const bought = applyInvestBuy(state, id, "GEI", 50);
     const sold = applyInvestSell(bought, id, "GEI", 0.2);
     expect(sold.accounts.find((a) => a.id === id)?.balance).toBeCloseTo(50 + 0.2 * 98.6, 2);
+  });
+});
+
+describe("stock trades at a live price", () => {
+  function withInvestAccount(cash: number): { state: BankState; id: string } {
+    let s = profile(cash, false);
+    s = applyNewAccount(s, { kind: "invest" });
+    const id = s.accounts.find((a) => a.kind === "invest")!.id;
+    s = applyTransfer(s, "main", id, cash);
+    return { state: s, id };
+  }
+
+  it("turns the dollar amount into shares at the price passed in", () => {
+    const { state, id } = withInvestAccount(1000);
+    const bought = applyInvestBuy(state, id, "AAPL", 230, 250);
+    expect(bought.investments["AAPL"]).toBeCloseTo(230 / 250, 6);
+  });
+
+  it("refuses a buy larger than the cash, regardless of the price", () => {
+    const { state, id } = withInvestAccount(100);
+    expect(validateInvestBuy(state, id, "NVDA", 150, 180).ok).toBe(false);
+  });
+
+  it("sells shares at the price passed in and credits the cash", () => {
+    const { state, id } = withInvestAccount(1000);
+    const bought = applyInvestBuy(state, id, "MSFT", 420, 420);
+    const sold = applyInvestSell(bought, id, "MSFT", 1, 500);
+    expect(sold.investments["MSFT"]).toBeCloseTo(0, 6);
+    expect(sold.accounts.find((a) => a.id === id)?.balance).toBeCloseTo(580 + 500, 2);
+  });
+});
+
+describe("stock feed helpers", () => {
+  it("keeps a simulated price within 0.2% of the last price per step", () => {
+    const next = simulatedNext(200, 200, () => 1);
+    expect(next).toBeGreaterThan(200);
+    expect(next).toBeLessThanOrEqual(200 * 1.002 + 0.01);
+    expect(simulatedNext(200, 200, () => 0)).toBeLessThan(200);
+  });
+
+  it("never lets the simulated price fall below half its starting price", () => {
+    expect(simulatedNext(100, 200, () => 0)).toBeGreaterThanOrEqual(100);
+  });
+
+  it("gives the percentage change from the previous close", () => {
+    expect(changeOf(110, 100)).toBe(10);
+    expect(changeOf(95, 100)).toBe(-5);
+    expect(changeOf(50, 0)).toBe(0);
+  });
+
+  it("lists six stocks, each with a positive starting price", () => {
+    expect(STOCKS).toHaveLength(6);
+    for (const s of STOCKS) expect(s.basePrice).toBeGreaterThan(0);
   });
 });
 

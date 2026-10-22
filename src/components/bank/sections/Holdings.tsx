@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { formatMoney, round2, CRYPTO_HOLDINGS, INVEST_HOLDINGS, type Holding } from "@/lib/bank/data";
 import { ASSET_NAMES, acquireMarket, useMarket } from "@/lib/bank/market";
+import { acquireStocks, STOCKS, useStockQuotes } from "@/lib/bank/stocks";
+import { StockMarket } from "./StockMarket";
 import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { SectionHeader } from "../Layout";
@@ -72,7 +74,7 @@ function HoldingsView({ title, subtitle, items, unitLabel, empty }: { title: str
           })}
         </ul>
       )}
-      <p className="text-xs text-muted-foreground">Prices are fictional demo values.</p>
+      <p className="text-xs text-muted-foreground">Fund and bond prices are demo values. Stock prices are shown as described in the Stocks section.</p>
     </div>
   );
 }
@@ -125,14 +127,31 @@ const qtyLabel = (n: number) => n.toLocaleString("en-US", { maximumFractionDigit
 
 export function InvestSection() {
   const { investments } = useBank();
-  const items = INVEST_HOLDINGS.map((h) => ({ ...h, quantity: investments[h.symbol] ?? 0 })).filter((h) => h.quantity > 0);
+  const quotes = useStockQuotes();
+  useEffect(() => acquireStocks(), []);
+
+  // Funds and bonds at their demo prices, and stocks at their live prices.
+  const funds = INVEST_HOLDINGS.map((h) => ({ ...h, quantity: investments[h.symbol] ?? 0 })).filter((h) => h.quantity > 0);
+  const stocks: Holding[] = STOCKS.map((s) => ({
+    symbol: s.symbol,
+    name: s.name,
+    kind: "Stock",
+    quantity: investments[s.symbol] ?? 0,
+    price: quotes[s.symbol]?.price ?? s.basePrice,
+    change24h: quotes[s.symbol]?.changePct ?? 0,
+  })).filter((h) => h.quantity > 0);
+  const items = [...funds, ...stocks];
+
   return (
-    <HoldingsView
-      title="Investments"
-      subtitle="Funds, bonds and stocks you hold."
-      items={items}
-      unitLabel={(h) => `${h.quantity} units`}
-      empty={{ title: "No investments yet", text: "Open an Investments account and buy your first fund, bond or stock." }}
-    />
+    <div className="space-y-6">
+      <HoldingsView
+        title="Investments"
+        subtitle="Funds, bonds and stocks you hold."
+        items={items}
+        unitLabel={(h) => `${h.quantity} ${h.kind === "Stock" ? "shares" : "units"}`}
+        empty={{ title: "No investments yet", text: "Buy your first stock below, or a fund or bond from your Investments account." }}
+      />
+      <StockMarket />
+    </div>
   );
 }
