@@ -1,3 +1,4 @@
+import { currencyCode } from "@/lib/bank/data";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ArrowUpDown, BookOpen, Snowflake } from "lucide-react";
 import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue } from "framer-motion";
@@ -5,7 +6,9 @@ import { MoveSheet } from "./MoveSheet";
 import { AccountGuide } from "./AccountGuide";
 import { CRYPTO_HOLDINGS, INVEST_HOLDINGS, formatMoney, type Account, type AccountKind, type SectionId, type Transaction } from "@/lib/bank/data";
 import { CRYPTO_ASSETS, heldOf } from "@/lib/bank/crypto";
-import { CURRENCY_PER_USD, SAVINGS_RATE, cryptoValue, inCurrency, investmentsValue } from "@/lib/bank/money";
+import { SAVINGS_RATE, cryptoValue, inCurrency, investmentsValue } from "@/lib/bank/money";
+import { ratePerEur, type Currency } from "@/lib/bank/fx";
+import { fromTyped } from "@/lib/bank/data";
 import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { TransactionList } from "../TransactionList";
@@ -251,7 +254,7 @@ function BankDetails({ account: a }: { account: Account }) {
         </p>
       )}
       {kind === "currency" && a.currency && (
-        <p className="text-xs text-muted-foreground">Demo rate: 1 USD = {CURRENCY_PER_USD[a.currency]} {a.currency}. Balances are kept in USD.</p>
+        <p className="text-xs text-muted-foreground">Live rate: 1 EUR = {ratePerEur(a.currency as Currency).toFixed(4)} {a.currency}. Balances are kept in EUR.</p>
       )}
       {kind === "joint" && <p className="text-xs text-muted-foreground">Shared with {a.coHolder}. Both holders can see and use this account.</p>}
     </div>
@@ -303,8 +306,8 @@ function InvestDetails({ account }: { account: Account }) {
 
   const buy = (e: FormEvent) => {
     e.preventDefault();
-    const res = investBuy(account.id, symbol, Number(usd));
-    setMsg(res.ok ? { ok: true, text: `Bought ${symbol} for ${formatMoney(Number(usd))}.` } : { ok: false, text: res.error });
+    const res = investBuy(account.id, symbol, fromTyped(Number(usd)));
+    setMsg(res.ok ? { ok: true, text: `Bought ${symbol} for ${formatMoney(fromTyped(Number(usd)))}.` } : { ok: false, text: res.error });
   };
   const sell = (e: FormEvent) => {
     e.preventDefault();
@@ -329,7 +332,7 @@ function InvestDetails({ account }: { account: Account }) {
           </select>
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">USD</span>
+          <span className="text-muted-foreground">{currencyCode()}</span>
           <input className="field tabular-nums" type="number" min="1" step="1" value={usd} onChange={(e) => setUsd(e.target.value)} />
         </label>
         <button type="submit" className="btn btn-primary">Buy</button>

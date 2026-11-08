@@ -250,3 +250,12 @@ describe("new accounts", () => {
     expect(validateNewAccount(s, { kind: "pockets" }).ok).toBe(false);
   });
 });
+
+describe("plan account limits", () => {
+  it("the Everyday plan stops at two accounts", () => {
+    let s = createEmptyState(); // one account: Main current account
+    s = applyNewAccount(s, { kind: "invest" }); // two accounts
+    const result = validateNewAccount(s, { kind: "savings" });
+    expect(result).toMatchObject({ ok: false, error: expect.stringContaining("Everyday plan includes 2 accounts") });
+  });
+});

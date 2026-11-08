@@ -3,6 +3,7 @@
 // buying and selling in this app is a simulation against the demo bank balance.
 
 import { useSyncExternalStore } from "react";
+import { usdToEur } from "./fx";
 
 export const MARKET_BASES = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA"] as const;
 export const ASSET_NAMES: Record<string, string> = {
@@ -22,9 +23,9 @@ export const FEE_RATE = 0.001; // 0.1% per trade, simulated
 export interface MarketTicker {
   symbol: string; // e.g. BTCUSDT
   base: string; // e.g. BTC
-  price: number; // USD
+  price: number; // EUR, converted from the USDT price
   change24h: number; // percent
-  volumeUsd: number; // 24h quote volume in USD
+  volumeEur: number; // 24h quote volume in EUR
   high: number;
   low: number;
 }
@@ -71,11 +72,11 @@ export async function fetchMarket(signal?: AbortSignal): Promise<MarketTicker[]>
   return rows.map((r) => ({
     symbol: r.symbol,
     base: r.symbol.replace(/USDT$/, ""),
-    price: Number(r.lastPrice),
+    price: Number(r.lastPrice) * usdToEur(),
     change24h: Number(r.priceChangePercent),
-    volumeUsd: Number(r.quoteVolume),
-    high: Number(r.highPrice),
-    low: Number(r.lowPrice),
+    volumeEur: Number(r.quoteVolume) * usdToEur(),
+    high: Number(r.highPrice) * usdToEur(),
+    low: Number(r.lowPrice) * usdToEur(),
   }));
 }
 
@@ -85,7 +86,7 @@ export async function fetchOrderBook(base: string, signal?: AbortSignal): Promis
     `${BASE_URL}/depth?symbol=${base}USDT&limit=20`,
     signal,
   );
-  const toLevel = ([p, q]: [string, string]): Level => ({ price: Number(p), qty: Number(q) });
+  const toLevel = ([p, q]: [string, string]): Level => ({ price: Number(p) * usdToEur(), qty: Number(q) });
   return { bids: raw.bids.map(toLevel), asks: raw.asks.map(toLevel) };
 }
 
@@ -100,21 +101,21 @@ export async function fetchCandles(base: string, interval: Interval, signal?: Ab
   );
   return rows.map(([time, open, high, low, close]) => ({
     time,
-    open: Number(open),
-    high: Number(high),
-    low: Number(low),
-    close: Number(close),
+    open: Number(open) * usdToEur(),
+    high: Number(high) * usdToEur(),
+    low: Number(low) * usdToEur(),
+    close: Number(close) * usdToEur(),
   }));
 }
 
 export interface Fill {
   qty: number; // base asset bought or sold
-  quote: number; // USD before fees
+  quote: number; // EUR before fees
   avgPrice: number;
   complete: boolean; // false when the book lacks enough liquidity
 }
 
-/** Buy with a USD amount by walking up the asks. */
+/** Buy with a EUR amount by walking up the asks. */
 export function simulateBuy(asks: Level[], usd: number): Fill {
   let remaining = usd;
   let qty = 0;

@@ -1,3 +1,5 @@
+import { fromTyped } from "@/lib/bank/data";
+import { currencyCode } from "@/lib/bank/data";
 import { useMemo, useState, type FormEvent } from "react";
 import { formatMoney, round2, spentInCategory, type Budget } from "@/lib/bank/data";
 import { useBank } from "@/lib/bank/store";
@@ -19,7 +21,7 @@ function BudgetRow({ budget }: { budget: Budget }) {
 
   const save = (e: FormEvent) => {
     e.preventDefault();
-    const res = setLimit(budget.id, draft.trim() === "" ? NaN : Number(draft));
+    const res = setLimit(budget.id, draft.trim() === "" ? NaN : fromTyped(Number(draft)));
     if (res.ok) {
       setEditing(false);
       setError("");
@@ -80,7 +82,7 @@ export function BudgetsSection() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const res = addBudget(name, limit.trim() === "" ? NaN : Number(limit));
+    const res = addBudget(name, limit.trim() === "" ? NaN : fromTyped(Number(limit)));
     if (res.ok) {
       setMsg({ ok: true, text: `Added ${name.trim()}.` });
       setName("");
@@ -116,7 +118,7 @@ export function BudgetsSection() {
             </datalist>
           </label>
           <label className="min-w-0 space-y-1.5 text-sm">
-            <span className="text-muted-foreground">Monthly limit (USD)</span>
+            <span className="text-muted-foreground">Monthly limit ({currencyCode()})</span>
             <input className="field" type="number" step="0.01" inputMode="decimal" value={limit} onChange={(e) => setLimitValue(e.target.value)} placeholder="0.00" />
           </label>
           <button type="submit" className="btn btn-primary">Add budget</button>

@@ -1,7 +1,9 @@
+import { currencyCode } from "@/lib/bank/data";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, CreditCard, Smartphone, Truck, X } from "lucide-react";
-import { CARD_TONES, type Card, type CardTone } from "@/lib/bank/data";
+import { CARD_TONES, formatMoney, type Card, type CardTone } from "@/lib/bank/data";
+import { fromTyped } from "@/lib/bank/data";
 import { CARD_TYPES, type NewCardConfig } from "@/lib/bank/money";
 import { useBank } from "@/lib/bank/store";
 import { SheetBackdrop, SheetPanel } from "../motion";
@@ -40,7 +42,7 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
 
   const next = () => {
     if (step === 1 && label.trim().length < 2) return setError("Name the card (at least 2 characters).");
-    if (step === 2 && limit.trim() !== "" && (!Number.isFinite(Number(limit)) || Number(limit) < 0)) return setError("The monthly limit must be 0 or more.");
+    if (step === 2 && limit.trim() !== "" && (!Number.isFinite(fromTyped(Number(limit))) || fromTyped(Number(limit)) < 0)) return setError("The monthly limit must be 0 or more.");
     setError("");
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };
@@ -52,7 +54,7 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
       type,
       tone,
       onlinePayments: online,
-      spendLimit: limit.trim() === "" ? 0 : Number(limit),
+      spendLimit: limit.trim() === "" ? 0 : fromTyped(Number(limit)),
       delivery,
     });
     if (!res.ok) return setError(res.error);
@@ -149,7 +151,7 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
                 <input type="checkbox" className="h-5 w-5 accent-[var(--accent)]" checked={online} onChange={(e) => setOnline(e.target.checked)} />
               </label>
               <label className="block space-y-1.5 text-sm">
-                <span className="text-muted-foreground">Monthly limit (USD, 0 for none)</span>
+                <span className="text-muted-foreground">Monthly limit ({currencyCode()}, 0 for none)</span>
                 <input className="field tabular-nums" type="number" min="0" step="10" inputMode="decimal" value={limit} onChange={(e) => { setLimit(e.target.value); setError(""); }} />
               </label>
             </>
@@ -172,7 +174,7 @@ export function AddCardSheet({ onClose, onAdded, mandatory = false }: { onClose:
                 <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Card</dt><dd>{label.trim()} · {network} {type}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Finish</dt><dd>{FINISH_LABEL[tone]}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Online payments</dt><dd>{online ? "On" : "Off"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Monthly limit</dt><dd>{Number(limit) > 0 ? `$${Number(limit).toFixed(2)}` : "None"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Monthly limit</dt><dd>{fromTyped(Number(limit)) > 0 ? formatMoney(fromTyped(Number(limit))) : "None"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Delivery</dt><dd>{delivery === "digital" ? "Digital, ready now" : "Physical, on its way"}</dd></div>
               </dl>
             </>

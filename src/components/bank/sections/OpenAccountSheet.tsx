@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Bitcoin, BookOpen, ChevronLeft, Coins, PiggyBank, TrendingUp, Users, Globe2, X } from "lucide-react";
-import { CURRENCY_PER_USD, SAVINGS_RATE, type NewAccountConfig } from "@/lib/bank/money";
+import { SAVINGS_RATE, type NewAccountConfig } from "@/lib/bank/money";
+import { FOREIGN_CURRENCIES, ratePerEur, type Currency } from "@/lib/bank/fx";
 import { useBank } from "@/lib/bank/store";
 import { AddCardSheet } from "./AddCardSheet";
 import { AccountGuide } from "./AccountGuide";
@@ -10,7 +11,7 @@ export type Choice = "savings" | "currency" | "joint" | "crypto" | "invest" | "p
 
 const OPTIONS: { id: Choice; title: string; detail: string; icon: typeof PiggyBank }[] = [
   { id: "savings", title: "Savings account", detail: `Keep cash apart. Interest is shown at ${(SAVINGS_RATE * 100).toFixed(2)}% a year. You can take money out at any time.`, icon: PiggyBank },
-  { id: "currency", title: "Currency account", detail: "Hold GBP, CHF or EUR next to your USD money. Balances are shown in that currency.", icon: Globe2 },
+  { id: "currency", title: "Currency account", detail: "Hold USD, GBP or CHF next to your euro money. Balances are shown in that currency.", icon: Globe2 },
   { id: "joint", title: "Joint account", detail: "Share an account with one other person, with its own IBAN. You can have one.", icon: Users },
   { id: "crypto", title: "Crypto wallet", detail: "Receive and sell crypto from one account page. Sales go to your main account.", icon: Bitcoin },
   { id: "invest", title: "Investments", detail: "Buy and sell funds, bonds and stocks with cash you move in from another account.", icon: TrendingUp },
@@ -94,9 +95,9 @@ export function OpenAccountSheet({ onClose, initial }: { onClose: () => void; in
                 <label className="block space-y-1.5 text-sm">
                   <span className="text-muted-foreground">Currency</span>
                   <select className="field" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                    {Object.keys(CURRENCY_PER_USD).map((c) => <option key={c} value={c}>{c}</option>)}
+                    {FOREIGN_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
-                  <span className="block text-xs text-muted-foreground">Demo rate: 1 USD = {CURRENCY_PER_USD[currency]} {currency}.</span>
+                  <span className="block text-xs text-muted-foreground">Live rate: 1 EUR = {ratePerEur(currency as Currency).toFixed(4)} {currency}.</span>
                 </label>
               )}
 

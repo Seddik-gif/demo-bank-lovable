@@ -1,3 +1,5 @@
+import { fromTyped, toDisplayAmount } from "@/lib/bank/data";
+import { currencyCode } from "@/lib/bank/data";
 import { useMemo, useRef, useState } from "react";
 import { mouseDragHandlers } from "@/lib/bank/dragScroll";
 import { SheetBackdrop, SheetPanel } from "../motion";
@@ -20,7 +22,7 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
 
   const from = movable.find((a) => a.id === fromId);
   const to = movable.find((a) => a.id === toId);
-  const value = amount.trim() === "" ? NaN : Number(amount);
+  const value = amount.trim() === "" ? NaN : fromTyped(Number(amount));
   const valid = Number.isFinite(value) && value > 0 && !!from && !!to && from.id !== to.id && value <= (from?.balance ?? 0);
 
   const swap = () => {
@@ -61,7 +63,7 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
 
           <div className="glass space-y-3 p-4">
             <label className="block text-center">
-              <span className="text-xs text-muted-foreground">Amount (USD)</span>
+              <span className="text-xs text-muted-foreground">Amount ({currencyCode()})</span>
               <input
                 className="mt-1 block w-full bg-transparent text-center font-display text-4xl font-semibold tabular-nums outline-none"
                 inputMode="decimal"
@@ -77,9 +79,9 @@ export function MoveSheet({ onClose, initialFrom, initialTo }: { onClose: () => 
             <p className="text-center text-xs text-muted-foreground">Available in {from?.name ?? "this account"}: {from ? formatMoney(from.balance) : "$0.00"}</p>
             <div className="flex justify-center gap-2" role="group" aria-label="Quick amounts">
               {QUICK.map((q) => (
-                <button key={q} type="button" className="btn btn-ghost btn-sm" onClick={() => { setAmount(String(q)); setMsg(null); }}>${q}</button>
+                <button key={q} type="button" className="btn btn-ghost btn-sm" onClick={() => { setAmount(String(q)); setMsg(null); }}>{formatMoney(fromTyped(q))}</button>
               ))}
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setAmount(String(from?.balance ?? 0)); setMsg(null); }}>All</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setAmount(String(round2(toDisplayAmount(from?.balance ?? 0)))); setMsg(null); }}>All</button>
             </div>
           </div>
 

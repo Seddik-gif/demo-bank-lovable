@@ -7,6 +7,7 @@
 //
 // Trades are always simulated: no real money or shares are bought or sold.
 import { useSyncExternalStore } from "react";
+import { usdToEur } from "./fx";
 
 export interface StockInfo {
   symbol: string;
@@ -80,7 +81,7 @@ async function fetchFinnhub(symbol: string, key: string): Promise<StockQuote | n
     const body = (await res.json()) as { c?: number; pc?: number };
     if (!body.c || body.c <= 0) return null;
     if (body.pc && body.pc > 0) previousClose[symbol] = body.pc;
-    return { symbol, price: body.c, changePct: changeOf(body.c, previousClose[symbol] ?? body.c), at: Date.now(), source: "live" };
+    return { symbol, price: body.c * usdToEur(), changePct: changeOf(body.c, previousClose[symbol] ?? body.c), at: Date.now(), source: "live" };
   } catch {
     return null;
   }

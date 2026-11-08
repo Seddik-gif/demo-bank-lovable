@@ -1,3 +1,5 @@
+import { fromTyped } from "@/lib/bank/data";
+import { currencyCode } from "@/lib/bank/data";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -78,7 +80,7 @@ export function TradeStockSheet({ symbol, onClose }: { symbol: string; onClose: 
   const [amount, setAmount] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const value = Number(amount);
+  const value = side === "buy" ? fromTyped(Number(amount)) : Number(amount);
   const units = round2(value / price);
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -119,7 +121,7 @@ export function TradeStockSheet({ symbol, onClose }: { symbol: string; onClose: 
               ))}
             </div>
             <label className="block space-y-1.5 text-sm">
-              <span className="text-muted-foreground">{side === "buy" ? `Amount in USD, from ${invest.name} (${formatMoney(invest.balance)} available)` : `Shares to sell (you hold ${held})`}</span>
+              <span className="text-muted-foreground">{side === "buy" ? `Amount in ${currencyCode()}, from ${invest.name} (${formatMoney(invest.balance)} available)` : `Shares to sell (you hold ${held})`}</span>
               <input className="field tabular-nums" type="number" min="0" step={side === "buy" ? "1" : "any"} inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); setMsg(null); }} required />
             </label>
             {Number.isFinite(value) && value > 0 && (

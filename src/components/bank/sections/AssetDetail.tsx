@@ -1,6 +1,7 @@
+import { currencyCode } from "@/lib/bank/data";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft } from "lucide-react";
-import { formatMoney, round2, CASH_ACCOUNT_ID } from "@/lib/bank/data";
+import { formatMoney, formatPrice, fromTyped, round2, toDisplayAmount, CASH_ACCOUNT_ID } from "@/lib/bank/data";
 import {
   ASSET_NAMES,
   DEPTH_REFRESH_MS,
@@ -20,13 +21,7 @@ import { useSettings } from "@/lib/bank/settings";
 import { Money, useMoneyText } from "../Money";
 import { PriceChart, type ChartMode } from "./PriceChart";
 
-const priceFmt = (n: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: n < 1 ? 4 : 2,
-    maximumFractionDigits: n < 1 ? 6 : 2,
-  }).format(n);
+const priceFmt = formatPrice;
 
 const qtyFmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 6 });
 const INTERVALS: { id: Interval; label: string }[] = [
@@ -56,7 +51,7 @@ function OrderBookTable({ book }: { book: OrderBook }) {
       <table className="w-full text-xs">
         <thead className="text-muted-foreground">
           <tr>
-            <th scope="col" className="pb-1 text-right font-medium">Price (USD)</th>
+            <th scope="col" className="pb-1 text-right font-medium">Price ({currencyCode()})</th>
             <th scope="col" className="pb-1 text-right font-medium">Amount</th>
             <th scope="col" className="pb-1 text-right font-medium">Total</th>
           </tr>
@@ -88,7 +83,7 @@ export function AssetDetail({ base, onBack }: { base: string; onBack: () => void
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const settings = useSettings();
   const fmt = useMoneyText();
-  const [amount, setAmount] = useState(() => (settings.defaultOrderUsd > 0 ? String(settings.defaultOrderUsd) : ""));
+  const [amount, setAmount] = useState(() => (settings.defaultOrderUsd > 0 ? String(Math.round(toDisplayAmount(settings.defaultOrderUsd) * 100) / 100) : ""));
   const [confirming, setConfirming] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -121,7 +116,7 @@ export function AssetDetail({ base, onBack }: { base: string; onBack: () => void
 
   const cash = accounts.find((a) => a.id === CASH_ACCOUNT_ID)?.balance ?? 0;
   const held = crypto[base] ?? 0;
-  const entered = Number(amount);
+  const entered = side === "buy" ? fromTyped(Number(amount)) : Number(amount);
   const validAmount = amount.trim() !== "" && Number.isFinite(entered) && entered > 0;
 
   // Preview of the fill against the current order book.
@@ -135,7 +130,7 @@ export function AssetDetail({ base, onBack }: { base: string; onBack: () => void
 
   let blocker = "";
   if (!book) blocker = bookError || "Waiting for the order book…";
-  else if (!validAmount) blocker = side === "buy" ? "Enter a USD amount to buy." : `Enter how much ${base} to sell.`;
+  else if (!validAmount) blocker = side === "buy" ? `Enter an amount in ${currencyCode()} to buy.` : `Enter how much ${base} to sell.`;
   else if (preview && !preview.complete)
     blocker = `Not enough liquidity: the order book can only fill part of this order at current prices.`;
   else if (side === "buy" && preview && preview.quote + fee > cash) blocker = `Not enough cash: you have ${fmt(cash)}.`;
@@ -181,7 +176,7 @@ export function AssetDetail({ base, onBack }: { base: string; onBack: () => void
       <section className="glass reveal p-5 sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">{name} · {base}/USD</p>
+            <p className="text-sm text-muted-foreground">{name} · {base}/{currencyCode()}</p>
             <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{ticker ? priceFmt(ticker.price) : "—"}</p>
           </div>
           {ticker && (
@@ -247,7 +242,7 @@ export function AssetDetail({ base, onBack }: { base: string; onBack: () => void
 
           <form onSubmit={submit} className="mt-3 space-y-3">
             <label className="block space-y-1.5 text-sm">
-              <span className="text-muted-foreground">{side === "buy" ? "Amount to spend (USD)" : `Amount to sell (${base})`}</span>
+              <span className="text-muted-foreground">{side === "buy" ? `Amount to spend (${currencyCode()})` : `Amount to sell (${base})`}</span>
               <input className="field" type="number" min="0" step="any" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); setConfirming(false); }} placeholder="0.00" />
             </label>
 

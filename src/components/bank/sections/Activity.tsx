@@ -44,9 +44,11 @@ export function ActivitySection() {
     );
   }, [transactions, query, category, type]);
 
-  const net = round2(filtered.reduce((s, t) => s + t.amount, 0));
-  const moneyIn = round2(filtered.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0));
-  const moneyOut = round2(filtered.filter((t) => t.amount < 0).reduce((s, t) => s + -t.amount, 0));
+  // Moves between your own accounts are not money coming in or going out, so they are left out of the totals.
+  const outside = filtered.filter((t) => t.category !== "Transfer");
+  const net = round2(outside.reduce((s, t) => s + t.amount, 0));
+  const moneyIn = round2(outside.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0));
+  const moneyOut = round2(outside.filter((t) => t.amount < 0).reduce((s, t) => s + -t.amount, 0));
   const groups = useMemo(() => byDay(filtered), [filtered]);
 
   return (

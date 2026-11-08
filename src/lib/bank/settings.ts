@@ -2,11 +2,13 @@
 // (see styles.css); the number format is passed to the money formatter in data.ts.
 
 import { useSyncExternalStore } from "react";
-import { setMoneyLocale } from "./data";
+import { setMoneyFormat } from "./data";
+import { CURRENCIES, type Currency } from "./fx";
 
 export interface Settings {
   language: "en" | "fr";
   numberFormat: "us" | "eu";
+  currency: Currency;
   hideBalances: boolean;
   reduceMotion: boolean;
   autoLockMinutes: 0 | 1 | 5 | 15;
@@ -27,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
   haptics: true,
   language: "en",
   numberFormat: "us",
+  currency: "EUR",
   hideBalances: false,
   reduceMotion: false,
   autoLockMinutes: 0,
@@ -49,6 +52,7 @@ function load(): Settings {
     return {
       language: p.language === "fr" ? "fr" : "en",
       numberFormat: p.numberFormat === "eu" ? "eu" : "us",
+      currency: (CURRENCIES as readonly string[]).includes(p.currency as string) ? (p.currency as Currency) : d.currency,
       hideBalances: typeof p.hideBalances === "boolean" ? p.hideBalances : d.hideBalances,
       reduceMotion: typeof p.reduceMotion === "boolean" ? p.reduceMotion : d.reduceMotion,
       autoLockMinutes: ([0, 1, 5, 15] as const).includes(p.autoLockMinutes as never) ? (p.autoLockMinutes as Settings["autoLockMinutes"]) : d.autoLockMinutes,
@@ -78,7 +82,7 @@ const listeners = new Set<() => void>();
 function applyToPage(s: Settings) {
   const root = document.documentElement;
   root.lang = s.language;
-  setMoneyLocale(s.numberFormat === "eu" ? "de-DE" : "en-US");
+  setMoneyFormat(s.numberFormat === "eu" ? "de-DE" : "en-US", s.currency);
   if (s.reduceMotion) root.setAttribute("data-motion", "reduce");
   else root.removeAttribute("data-motion");
   if (s.hideBalances) root.setAttribute("data-hide-balances", "");

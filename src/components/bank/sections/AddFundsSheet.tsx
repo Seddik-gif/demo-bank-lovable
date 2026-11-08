@@ -1,8 +1,10 @@
+import { currencyCode } from "@/lib/bank/data";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Bitcoin, ChevronLeft, CreditCard, Landmark, Smartphone, X, type LucideIcon } from "lucide-react";
 import { formatMoney, round2, type Card } from "@/lib/bank/data";
-import { addedToday, CRYPTO_MIN_USD, feeOn, FUNDING_LABEL, MAX_FUNDING, netOf, RULES, type BankSpeed, type FundingMethod } from "@/lib/bank/funding";
+import { addedToday, CRYPTO_MIN_EUR, feeOn, FUNDING_LABEL, MAX_FUNDING, netOf, RULES, type BankSpeed, type FundingMethod } from "@/lib/bank/funding";
+import { fromTyped } from "@/lib/bank/data";
 import { heldOf } from "@/lib/bank/crypto";
 import { FEE_RATE, fetchOrderBook, simulateSell, type Fill, type OrderBook } from "@/lib/bank/market";
 import { track } from "@/lib/bank/monitor";
@@ -45,7 +47,7 @@ export function AddFundsSheet({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
 
   const heldSymbols = Object.entries(crypto).filter(([, q]) => q > 0).map(([s]) => s);
-  const value = amount.trim() === "" ? NaN : Number(amount);
+  const value = amount.trim() === "" ? NaN : fromTyped(Number(amount));
   const account = accounts.find((a) => a.id === accountId);
   const card: Card | undefined = cards.find((c) => c.id === cardId);
   const rule = method && method !== "crypto" ? RULES[method] : null;
@@ -119,8 +121,8 @@ export function AddFundsSheet({ onClose }: { onClose: () => void }) {
         setError(bookError || "The market can't fill that amount right now. Try a smaller amount.");
         return;
       }
-      if (saleNet < CRYPTO_MIN_USD) {
-        setError(`The minimum sale is ${formatMoney(CRYPTO_MIN_USD)}.`);
+      if (saleNet < CRYPTO_MIN_EUR) {
+        setError(`The minimum sale is ${formatMoney(CRYPTO_MIN_EUR)}.`);
         return;
       }
       setStep("review");
@@ -262,10 +264,10 @@ export function AddFundsSheet({ onClose }: { onClose: () => void }) {
         <p className="text-xs text-muted-foreground">{rule.note}</p>
 
         <div>
-          <p className="mb-2 text-xs text-muted-foreground">Amount (USD). Min {formatMoney(rule.min)}, up to {formatMoney(MAX_FUNDING)}. Left today: {formatMoney(Math.max(0, leftToday))}.</p>
+          <p className="mb-2 text-xs text-muted-foreground">Amount ({currencyCode()}). Min {formatMoney(rule.min)}, up to {formatMoney(MAX_FUNDING)}. Left today: {formatMoney(Math.max(0, leftToday))}.</p>
           <div className="flex flex-wrap gap-2">
             {CHIPS.map((c) => (
-              <button key={c} type="button" className={`btn btn-sm ${value === c ? "btn-primary" : "btn-ghost"}`} onClick={() => setAmount(String(c))}>${c}</button>
+              <button key={c} type="button" className={`btn btn-sm ${value === c ? "btn-primary" : "btn-ghost"}`} onClick={() => setAmount(String(c))}>{formatMoney(fromTyped(c))}</button>
             ))}
           </div>
           <input className="field mt-2 tabular-nums" type="number" min="1" step="1" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} aria-label="Amount to add" />

@@ -1,3 +1,4 @@
+import { fromTyped } from "@/lib/bank/data";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpDown, ArrowUpRight, ChevronRight, Circle, CreditCard, LogOut, MoreHorizontal, PlusCircle, QrCode, Receipt, Search, Send, X, type LucideIcon } from "lucide-react";
@@ -63,7 +64,7 @@ function SimulateIncoming() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const res = receiveMoney(from, accountId, amount.trim() === "" ? NaN : Number(amount));
+    const res = receiveMoney(from, accountId, amount.trim() === "" ? NaN : fromTyped(Number(amount)));
     setError(res.ok ? "" : res.error);
     setDone(res.ok ? `Received from ${from}.` : "");
   };

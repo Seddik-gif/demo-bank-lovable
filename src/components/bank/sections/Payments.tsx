@@ -1,3 +1,5 @@
+import { fromTyped } from "@/lib/bank/data";
+import { currencyCode } from "@/lib/bank/data";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, Plus, Receipt, Send, Wallet } from "lucide-react";
 import {
@@ -161,7 +163,7 @@ function PaymentPanel({ contact, request, onClose }: { contact: Contact; request
 
   const splits: PaymentSplit[] = payable.map((a) => {
     const raw = amounts[a.id] ?? "";
-    return { accountId: a.id, amount: raw.trim() === "" ? 0 : Number(raw) };
+    return { accountId: a.id, amount: raw.trim() === "" ? 0 : fromTyped(Number(raw)) };
   });
   const total = round2(splits.reduce((sum, s) => sum + (Number.isFinite(s.amount) && s.amount > 0 ? s.amount : 0), 0));
 
@@ -250,7 +252,7 @@ function RequestPanel({ contact, onClose }: { contact: Contact; onClose: () => v
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
 
-  const value = amount.trim() === "" ? NaN : Number(amount);
+  const value = amount.trim() === "" ? NaN : fromTyped(Number(amount));
   const check = validateRequest({ accounts, contacts, messages } as BankState, contact.id, value, note);
   const blocker = check.ok ? "" : check.error;
 
@@ -270,7 +272,7 @@ function RequestPanel({ contact, onClose }: { contact: Contact; onClose: () => v
       </div>
       <p className="text-xs text-muted-foreground">They will see your request in the chat. It stays pending until you cancel it.</p>
       <label className="block space-y-1 text-xs">
-        <span className="text-muted-foreground">Amount (USD)</span>
+        <span className="text-muted-foreground">Amount ({currencyCode()})</span>
         <input className="field tabular-nums" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
       </label>
       <label className="block space-y-1 text-xs">

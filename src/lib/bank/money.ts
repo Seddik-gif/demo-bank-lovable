@@ -13,10 +13,12 @@ import {
   uid,
   type BankState,
   type Frequency,
+  type PlanId,
   type Result,
   type Transaction,
 } from "./data";
 import { STOCKS } from "./stocks";
+import { CURRENCIES, FOREIGN_CURRENCIES, fromEur, type Currency } from "./fx";
 
 const MAX_NAME = 40;
 export const MAX_GOAL_TARGET = 1_000_000;
@@ -295,9 +297,6 @@ export function applyCardDelivered(state: BankState, cardId: string): BankState 
 // ---- Opening other accounts --------------------------------------------------------
 
 export const SAVINGS_RATE = 0.0225; // demo yearly rate, shown before the user opens the account
-/** Demo rates against USD, used to show a currency account's balance in its own currency. */
-export const CURRENCY_PER_USD: Record<string, number> = { EUR: 0.92, GBP: 0.79, CHF: 0.8 };
-
 export type NewAccountConfig =
   | { kind: "savings" }
   | { kind: "currency"; currency: string }
@@ -308,13 +307,19 @@ export type NewAccountConfig =
 
 const digits = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join("");
 
+// Accounts each plan includes (the Plans screen shows the same numbers).
+const ACCOUNT_LIMIT: Record<PlanId, number> = { everyday: 2, plus: 5, pro: Infinity, private: Infinity };
+const PLAN_LABEL: Record<PlanId, string> = { everyday: "Everyday", plus: "Plus", pro: "Pro", private: "Private" };
+
 export function validateNewAccount(state: BankState, cfg: NewAccountConfig): Result {
+  const limit = ACCOUNT_LIMIT[state.plan];
+  if (state.accounts.length >= limit) return { ok: false, error: `Your ${PLAN_LABEL[state.plan]} plan includes ${limit} accounts. Choose a bigger plan to open another.` };
   if (cfg.kind === "savings") {
     if (state.accounts.some((a) => a.kind === "savings")) return { ok: false, error: "You already have a savings account." };
     return { ok: true };
   }
   if (cfg.kind === "currency") {
-    if (!(cfg.currency in CURRENCY_PER_USD)) return { ok: false, error: "Choose EUR, GBP or CHF." };
+    if (!(FOREIGN_CURRENCIES as readonly string[]).includes(cfg.currency)) return { ok: false, error: "Choose USD, GBP or CHF." };
     if (state.accounts.some((a) => a.kind === "currency" && a.currency === cfg.currency))
       return { ok: false, error: `You already have a ${cfg.currency} account.` };
     return { ok: true };
@@ -436,14 +441,14 @@ export function applyInvestSell(state: BankState, accountId: string, symbol: str
   };
 }
 
-/** Value of the holdings in USD, at the demo prices. */
+/** Value of the holdings in EUR, at the demo prices. */
 export function investmentsValue(investments: Record<string, number>): number {
   // Funds and bonds use their demo prices; stocks use their starting prices here. The Invest page shows live values.
   const prices = [...INVEST_HOLDINGS.map((h) => ({ symbol: h.symbol, price: h.price })), ...STOCKS.map((s) => ({ symbol: s.symbol, price: s.basePrice }))];
   return round2(prices.reduce((s, p) => s + (investments[p.symbol] ?? 0) * p.price, 0));
 }
 
-/** Value of the crypto holdings in USD, at the demo prices. */
+/** Value of the crypto holdings in EUR, at the demo prices. */
 export function cryptoValue(crypto: Record<string, number>): number {
   return round2(CRYPTO_HOLDINGS.reduce((s, h) => s + (crypto[h.symbol] ?? 0) * h.price, 0));
 }
@@ -466,9 +471,9 @@ export function applyNewAccount(state: BankState, cfg: NewAccountConfig): BankSt
   return { ...state, accounts: [...state.accounts, account] };
 }
 
-/** What a balance held in USD is worth in a currency account's currency. */
-export function inCurrency(usd: number, currency: string): number {
-  return round2(usd * (CURRENCY_PER_USD[currency] ?? 1));
+/** What a balance held in EUR is worth in a currency account's currency. */
+export function inCurrency(eur: number, currency: string): number {
+  return (CURRENCIES as readonly string[]).includes(currency) ? round2(fromEur(eur, currency as Currency)) : round2(eur);
 }
 
 // ---- Charts ----------------------------------------------------------------------

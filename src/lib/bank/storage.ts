@@ -1,4 +1,4 @@
-import { CARD_TONES, createDefaultState, PLAN_IDS, type Account, type BankState, type Budget, type Card, type ChatMessage, type Contact, type CryptoDeposit, type Goal, type PlanId, type Schedule, type Transaction } from "./data";
+import { CARD_TONES, createDefaultState, PLAN_IDS, withHoldingAccounts, type Account, type BankState, type Budget, type Card, type ChatMessage, type Contact, type CryptoDeposit, type Goal, type PlanId, type Schedule, type Transaction } from "./data";
 
 const KEY = "demo-bank:v1";
 
@@ -61,12 +61,15 @@ export function loadState(): BankState {
     const parsed: unknown = JSON.parse(raw);
     if (!isObj(parsed)) return defaults;
     const accounts = listOf(parsed.accounts, isAccount);
+    const crypto = isCrypto(parsed.crypto) ? parsed.crypto : defaults.crypto;
+    const investments = isCrypto(parsed.investments) ? parsed.investments : defaults.investments;
+    const savedAccounts = accounts && accounts.length >= 1 && accounts.some((a) => a.id === "main") ? accounts : defaults.accounts;
     return {
-      accounts: accounts && accounts.length >= 1 && accounts.some((a) => a.id === "main") ? accounts : defaults.accounts,
+      accounts: withHoldingAccounts(savedAccounts, crypto, investments),
       transactions: listOf(parsed.transactions, isTxn) ?? defaults.transactions,
       cards: (listOf(parsed.cards, isCard) ?? defaults.cards).map(withCardDetails),
       budgets: listOf(parsed.budgets, isBudget) ?? defaults.budgets,
-      crypto: isCrypto(parsed.crypto) ? parsed.crypto : defaults.crypto,
+      crypto,
       contacts: listOf(parsed.contacts, isContact) ?? defaults.contacts,
       messages: listOf(parsed.messages, isMessage) ?? defaults.messages,
       plan: typeof parsed.plan === "string" && (PLAN_IDS as string[]).includes(parsed.plan) ? (parsed.plan as PlanId) : defaults.plan,
@@ -74,7 +77,7 @@ export function loadState(): BankState {
       schedules: listOf(parsed.schedules, isSchedule) ?? defaults.schedules,
       blockedNext: listOf(parsed.blockedNext, isStr) ?? defaults.blockedNext,
       cryptoDeposits: listOf(parsed.cryptoDeposits, isDeposit) ?? defaults.cryptoDeposits,
-      investments: isCrypto(parsed.investments) ? parsed.investments : defaults.investments,
+      investments,
     };
   } catch {
     return defaults;
