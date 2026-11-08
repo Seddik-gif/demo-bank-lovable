@@ -1,3 +1,5 @@
+import { fromTyped } from "@/lib/bank/data";
+import { currencyCode } from "@/lib/bank/data";
 import { useState, type FormEvent } from "react";
 import { CalendarClock, Snowflake, Target, Trash2 } from "lucide-react";
 import type { Card, Frequency, SectionId } from "@/lib/bank/data";
@@ -7,7 +9,7 @@ import { useMoneyText, Money } from "../Money";
 
 const FREQUENCY_LABEL: Record<Frequency, string> = { weekly: "Every week", monthly: "Every month" };
 const dateLabel = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const amountOf = (v: string) => (v.trim() === "" ? NaN : Number(v));
+const amountOf = (v: string) => (v.trim() === "" ? NaN : fromTyped(Number(v)));
 
 function Alert({ message }: { message: string }) {
   return message ? <p role="alert" className="text-sm font-medium text-destructive">{message}</p> : null;
@@ -52,7 +54,7 @@ function GoalRow({ goalId }: { goalId: string }) {
           </select>
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Amount (USD)</span>
+          <span className="text-muted-foreground">Amount ({currencyCode()})</span>
           <input className="field tabular-nums" type="number" min="0" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
         </label>
         <button type="button" className="btn btn-primary btn-sm" onClick={() => run(() => contributeGoal(goal.id, accountId, amountOf(amount)))}>Add</button>
@@ -108,7 +110,7 @@ export function GoalsPanel() {
           <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. New laptop" maxLength={40} />
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Target (USD)</span>
+          <span className="text-muted-foreground">Target ({currencyCode()})</span>
           <input className="field tabular-nums" type="number" min="0" step="1" inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0" />
         </label>
         <button type="submit" className="btn btn-primary">Add goal</button>
@@ -191,7 +193,7 @@ export function SchedulesPanel() {
           <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Gym" maxLength={40} />
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Amount (USD)</span>
+          <span className="text-muted-foreground">Amount ({currencyCode()})</span>
           <input className="field tabular-nums" type="number" min="0" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
         </label>
         <label className="min-w-0 space-y-1 text-xs">
@@ -280,7 +282,7 @@ export function CardControls({ card }: { card: Card }) {
 
   const save = (e: FormEvent) => {
     e.preventDefault();
-    const res = setCardLimit(card.id, limit.trim() === "" ? 0 : Number(limit));
+    const res = setCardLimit(card.id, limit.trim() === "" ? 0 : fromTyped(Number(limit)));
     setError(res.ok ? "" : res.error);
     setNotice(res.ok ? "Limit saved." : "");
   };
@@ -293,7 +295,7 @@ export function CardControls({ card }: { card: Card }) {
       </label>
       <form onSubmit={save} className="flex items-end gap-2">
         <label className="min-w-0 flex-1 space-y-1 text-xs">
-          <span className="text-muted-foreground">Monthly limit (USD, 0 for none)</span>
+          <span className="text-muted-foreground">Monthly limit ({currencyCode()}, 0 for none)</span>
           <input className="field tabular-nums" type="number" min="0" step="10" inputMode="decimal" value={limit} onChange={(e) => setLimit(e.target.value)} />
         </label>
         <button type="submit" className="btn btn-ghost btn-sm shrink-0">Save limit</button>

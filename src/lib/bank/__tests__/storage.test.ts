@@ -98,3 +98,31 @@ describe("saving data", () => {
     expect(() => saveState(createDefaultState())).not.toThrow();
   });
 });
+
+describe("holding accounts", () => {
+  it("the demo profile opens the crypto and investing accounts it holds", () => {
+    const state = createDefaultState();
+    expect(state.accounts.some((a) => a.kind === "crypto")).toBe(true);
+    expect(state.accounts.some((a) => a.kind === "invest")).toBe(true);
+  });
+
+  it("an older save with holdings but no account gets the account back", () => {
+    const state = createDefaultState();
+    const saved = { ...state, accounts: state.accounts.filter((a) => a.kind !== "crypto" && a.kind !== "invest") };
+    const { storage, items } = fakeStorage();
+    items.set(KEY, JSON.stringify(saved));
+    useStorage(storage);
+    const loaded = loadState();
+    expect(loaded.accounts.some((a) => a.kind === "crypto")).toBe(true);
+    expect(loaded.accounts.some((a) => a.kind === "invest")).toBe(true);
+  });
+
+  it("no crypto account is added when there are no crypto holdings", () => {
+    const state = createDefaultState();
+    const saved = { ...state, crypto: {}, accounts: state.accounts.filter((a) => a.kind !== "crypto") };
+    const { storage, items } = fakeStorage();
+    items.set(KEY, JSON.stringify(saved));
+    useStorage(storage);
+    expect(loadState().accounts.some((a) => a.kind === "crypto")).toBe(false);
+  });
+});

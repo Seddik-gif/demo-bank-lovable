@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { SectionId } from "@/lib/bank/data";
 import { track } from "@/lib/bank/monitor";
 import { applyPalette, storedPalette } from "@/lib/bank/theme";
+import { acquireRates, useRates } from "@/lib/bank/fx";
 import { initSettings, useSettings } from "@/lib/bank/settings";
 import { BankProvider } from "@/lib/bank/store";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -79,6 +80,10 @@ export function DemoBankApp() {
     initSettings();
     applyPalette(storedPalette());
   }, []);
+
+  // Live exchange rates for the currency the money is shown in. Re-rendering here refreshes the amounts.
+  useEffect(() => acquireRates(), []);
+  useRates();
 
   // Auto-lock: sign out after the chosen period without activity.
   const settings = useSettings();

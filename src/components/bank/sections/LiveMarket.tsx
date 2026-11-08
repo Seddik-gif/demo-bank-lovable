@@ -1,16 +1,11 @@
+import { currencyCode } from "@/lib/bank/data";
+import { formatPrice } from "@/lib/bank/data";
 import { useEffect } from "react";
 import { ChevronRight, Radio } from "lucide-react";
 import { acquireMarket, REFRESH_MS, useMarket } from "@/lib/bank/market";
 
-const priceFmt = (n: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: n < 1 ? 4 : 2,
-    maximumFractionDigits: n < 1 ? 6 : 2,
-  }).format(n);
+const priceFmt = formatPrice;
 
-const volumeFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 });
 const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 export function LiveMarket({ onSelect }: { onSelect: (base: string) => void }) {
@@ -66,19 +61,19 @@ export function LiveMarket({ onSelect }: { onSelect: (base: string) => void }) {
                     className="reveal cursor-pointer transition-colors hover:bg-secondary"
                     onClick={() => onSelect(t.base)}
                   >
-                    <td className="py-3 font-semibold">
+                    <td className="whitespace-nowrap py-3 pr-4 font-semibold">
                       <button type="button" className="text-left" onClick={(e) => { e.stopPropagation(); onSelect(t.base); }}>
-                        {t.base}<span className="ml-1 text-xs font-normal text-muted-foreground">/USD</span>
+                        {t.base}<span className="ml-1 text-xs font-normal text-muted-foreground">/{currencyCode()}</span>
                       </button>
                     </td>
-                    <td className="py-3 text-right tabular-nums">{priceFmt(t.price)}</td>
+                    <td className="whitespace-nowrap py-3 pl-2 text-right tabular-nums">{priceFmt(t.price)}</td>
                     <td className={`py-3 text-right font-semibold tabular-nums ${up ? "text-success" : "text-destructive"}`}>
                       {up ? "▲" : "▼"} {Math.abs(t.change24h).toFixed(2)}%
                     </td>
                     <td className="py-3 text-right text-xs tabular-nums text-muted-foreground">
                       {priceFmt(t.low)} – {priceFmt(t.high)}
                     </td>
-                    <td className="py-3 text-right tabular-nums text-muted-foreground">{volumeFmt.format(t.volumeUsd)}</td>
+                    <td className="py-3 text-right tabular-nums text-muted-foreground">{priceFmt(t.volumeEur)}</td>
                     <td className="py-3 pl-2 text-muted-foreground"><ChevronRight className="h-4 w-4" aria-hidden /></td>
                   </tr>
                 );

@@ -176,7 +176,7 @@ export function PlansSheet({ current, onClose, onChoose }: { current: PlanId; on
     setMessage(`${plan.name} is now your plan. Demo only: nothing was charged.`);
   };
 
-  const saving = Math.round((1 - PLANS[index]!.annual / (PLANS[index]!.monthly * 12 || 1)) * 100);
+  const saving = PLANS[index]!.monthly > 0 ? Math.round((1 - PLANS[index]!.annual / (PLANS[index]!.monthly * 12)) * 100) : 0;
 
   return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[oklch(0.1_0.02_280)] text-white" role="dialog" aria-modal="true" aria-label="Plans and subscriptions">

@@ -1,3 +1,4 @@
+import { fromEur, toEur, type Currency } from "./fx";
 // Shared mock data, types and pure banking rules for Demo Bank.
 // Everything here is fictional: no real money, customers or APIs.
 
@@ -46,7 +47,7 @@ export interface Account {
   balance: number;
   /** What kind of account this is. Missing means a current account. */
   kind?: AccountKind;
-  /** Currency account: the currency the account is shown in. Balances are kept in USD. */
+  /** Currency account: the currency the account is shown in. Balances are kept in EUR. */
   currency?: string;
   /** Joint account: the second holder. */
   coHolder?: string;
@@ -85,7 +86,7 @@ export interface Card {
   tone: CardTone;
   /** Can be used for online purchases. Optional so older saved data still loads (missing means on). */
   onlinePayments?: boolean;
-  /** Spending cap per month in USD. Missing or 0 means no cap. */
+  /** Spending cap per month in EUR. Missing or 0 means no cap. */
   spendLimit?: number;
   /** Demo card details shown on the back of the card. Generated for new cards. */
   number?: string;
@@ -166,15 +167,61 @@ export function checkCredentials(username: string, password: string): boolean {
 
 export const round2 = (n: number) => Math.round(n * 100) / 100;
 
-// The number format is a setting (Settings > Number format), so it can change at runtime.
-let usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-export function setMoneyLocale(locale: "en-US" | "de-DE"): void {
-  usd = new Intl.NumberFormat(locale, { style: "currency", currency: "USD" });
+// Money is kept in euros. It is shown in the currency the customer chooses, at the live rate (see fx.ts).
+// The number format and the currency are settings, so both can change at runtime.
+let display: { locale: "en-US" | "de-DE"; currency: Currency } = { locale: "en-US", currency: "EUR" };
+let money = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" });
+
+export function setMoneyFormat(locale: "en-US" | "de-DE", currency: Currency): void {
+  display = { locale, currency };
+  money = new Intl.NumberFormat(locale, { style: "currency", currency });
 }
-export const formatMoney = (n: number) => usd.format(n);
-export const formatSigned = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "") + usd.format(Math.abs(n));
+export const setMoneyLocale = (locale: "en-US" | "de-DE") => setMoneyFormat(locale, display.currency);
+
+/** The currency money is shown in, e.g. "EUR". */
+export const currencyCode = (): Currency => display.currency;
+
+/** A euro amount, shown in the chosen currency. */
+export const formatMoney = (n: number) => money.format(fromEur(n, display.currency));
+export const formatSigned = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "") + money.format(fromEur(Math.abs(n), display.currency));
+
+/** An amount typed in the chosen currency, as euros for the money logic. */
+// Euros are kept to the cent, so an amount typed in dollars is rounded up to the first cent that shows as the typed amount.
+export const fromTyped = (n: number): number => {
+  const target = round2(n);
+  let eur = round2(toEur(n, display.currency));
+  for (let i = 0; i < 3 && round2(fromEur(eur, display.currency)) < target; i++) eur = round2(eur + 0.01);
+  return eur;
+};
+
+/** A euro amount as a number in the chosen currency, for pre-filling an input. */
+export const toDisplayAmount = (n: number): number => fromEur(n, display.currency);
+
+/** A price in euros, shown in the chosen currency with more decimals for small prices. */
+export const formatPrice = (n: number): string => {
+  const v = fromEur(n, display.currency);
+  return new Intl.NumberFormat(display.locale, {
+    style: "currency",
+    currency: display.currency,
+    minimumFractionDigits: v < 1 ? 4 : 2,
+    maximumFractionDigits: v < 1 ? 6 : 2,
+  }).format(v);
+};
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+/** The crypto and investing accounts. Holdings in these accounts only make sense once the account is open. */
+export const CRYPTO_ACCOUNT: Account = { id: "crypto", name: "Crypto wallet", iban: "No IBAN", balance: 0, kind: "crypto" };
+export const INVEST_ACCOUNT: Account = { id: "invest", name: "Investments", iban: "DB61 DEMO 0004 7733 1092", balance: 0, kind: "invest" };
+
+/** Adds the crypto or investing account when the saved holdings need one but the account is missing (older saves). */
+export function withHoldingAccounts(accounts: Account[], crypto: Record<string, number>, investments: Record<string, number>): Account[] {
+  const hasQuantity = (holdings: Record<string, number>) => Object.values(holdings).some((q) => q > 0);
+  let out = accounts;
+  if (hasQuantity(crypto) && !out.some((a) => a.kind === "crypto")) out = [...out, CRYPTO_ACCOUNT];
+  if (hasQuantity(investments) && !out.some((a) => a.kind === "invest")) out = [...out, INVEST_ACCOUNT];
+  return out;
+}
 
 export function createDefaultState(): BankState {
   return {
@@ -182,6 +229,8 @@ export function createDefaultState(): BankState {
       { id: "main", name: "Main current account", iban: "DB42 DEMO 0001 4286 5012", balance: 4286.5 },
       { id: "savings", name: "Savings", iban: "DB17 DEMO 0002 1285 0034", balance: 12850, kind: "savings", rate: 0.0225 },
       { id: "travel", name: "Travel pot", iban: "DB88 DEMO 0003 0615 2577", balance: 615.25 },
+      CRYPTO_ACCOUNT,
+      INVEST_ACCOUNT,
     ],
     transactions: [
       { id: "t1", date: "2026-10-16T18:20:00Z", description: "Fresh Market groceries", category: "Food", amount: -64.3, accountId: "main" },
@@ -263,7 +312,7 @@ export interface TradeRequest {
   base: string;
   side: "buy" | "sell";
   qty: number; // asset quantity
-  quote: number; // USD before fees
+  quote: number; // EUR before fees
   feeRate: number;
 }
 

@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/bank/data";
 import { useState, type PointerEvent } from "react";
 import type { Candle, Interval } from "@/lib/bank/market";
 
@@ -8,13 +9,7 @@ const H = 260;
 const PAD = 12;
 const GRID_LINES = 4;
 
-const priceFmt = (n: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: n < 1 ? 4 : 2,
-    maximumFractionDigits: n < 1 ? 6 : 2,
-  }).format(n);
+const priceFmt = formatPrice;
 
 const pctFmt = (n: number) => `${n >= 0 ? "+" : "−"}${Math.abs(n).toFixed(2)}%`;
 

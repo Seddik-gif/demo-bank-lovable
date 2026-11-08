@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "re
 import { createPortal } from "react-dom";
 import { Bell, Check, ChevronDown, ChevronRight, Copy, CreditCard, Download, Gift, HelpCircle, History, Info, Landmark, Link2, LogOut, Palette, Shield, SlidersHorizontal, Star, Trash2, User, X, type LucideIcon } from "lucide-react";
 import { applyPalette, PALETTES, storedPalette, type PaletteId } from "@/lib/bank/theme";
-import { initials, type Account, type Transaction } from "@/lib/bank/data";
+import { formatMoney, fromTyped, initials, type Account, type Transaction } from "@/lib/bank/data";
+import { CURRENCIES, CURRENCY_NAMES, useRates } from "@/lib/bank/fx";
 import { useBank } from "@/lib/bank/store";
 import { Money } from "../Money";
 import { OpenAccountSheet } from "./OpenAccountSheet";
@@ -246,7 +247,9 @@ function ThemeGroup() {
 
 function SettingsPanel() {
   const s = useSettings();
+  const rates = useRates();
   const bank = useBank();
+  const rateNote = rates.source === "live" ? `Live rates from the European Central Bank, ${rates.date ?? "today"}.` : "Live rates are not available right now, so fallback rates are used.";
   const [armed, setArmed] = useState(false);
   const [note, setNote] = useState("");
   const set = (patch: Partial<Settings>) => updateSettings(patch);
@@ -287,6 +290,13 @@ function SettingsPanel() {
           options={[{ value: "us", label: "1,234.56" }, { value: "eu", label: "1.234,56" }]}
           onChange={(v) => set({ numberFormat: v })}
         />
+        <Select
+          label="Currency"
+          description={`Amounts are shown in this currency at the current rate. ${rateNote}`}
+          value={s.currency}
+          options={CURRENCIES.map((c) => ({ value: c, label: `${c}, ${CURRENCY_NAMES[c]}` }))}
+          onChange={(v) => set({ currency: v })}
+        />
         <Toggle label="Hide balances" description="Show ********** instead of amounts. Click any amount to toggle." checked={s.hideBalances} onChange={(v) => set({ hideBalances: v })} />
         <Toggle label="Reduce motion" description="Turns off the sheen, tilt and fade effects" checked={s.reduceMotion} onChange={(v) => set({ reduceMotion: v })} />
         <Toggle label="Sounds" description="Short tones for payments, notifications and Pip" checked={s.sounds} onChange={(v) => set({ sounds: v })} />
@@ -319,10 +329,10 @@ function SettingsPanel() {
           value={s.defaultOrderUsd}
           options={[
             { value: 0, label: "Start empty" },
-            { value: 50, label: "$50" },
-            { value: 100, label: "$100" },
-            { value: 250, label: "$250" },
-            { value: 500, label: "$500" },
+            { value: 50, label: formatMoney(50) },
+            { value: 100, label: formatMoney(100) },
+            { value: 250, label: formatMoney(250) },
+            { value: 500, label: formatMoney(500) },
           ]}
           onChange={(v) => set({ defaultOrderUsd: v })}
         />

@@ -13,11 +13,11 @@ export const FUNDING_LABEL: Record<FundingMethod, string> = {
   bank: "bank transfer",
 };
 
-/** Largest amount for one top-up, in USD. */
+/** Largest amount for one top-up, in EUR. */
 export const MAX_FUNDING = 10_000;
 
 /** Crypto sales use the exchange's trade fee and the live order book (see market.ts). */
-export const CRYPTO_MIN_USD = 10;
+export const CRYPTO_MIN_EUR = 10;
 
 // Demo settings: how long a pending amount takes to become available. Real life: about one business day.
 export const SETTLE_MS = { card: 60_000, bankStandard: 120_000 } as const;
